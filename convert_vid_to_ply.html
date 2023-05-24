@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Video to 3D Model</title>
+        <script src="https://threejs.org/build/three.js"></script>
+        <script src="https://threejs.org/examples/js/exporters/PLYExporter.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.0/jsmediatags.min.js"></script>
+
+    </head>
+    <body>
+        <h1>Video to 3D Model</h1>
+        <input type="file" id="videoInput" accept="video/*">
+        <video id="video" width="640" height="480" controls></video>
+        <div id="canvas-container"></div>
+        <script src="convert_vid_to_ply.js"></script>
+    </body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "timecube",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dat.gui": "^0.7.9",
+    "electron": "^24.3.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "jimp": "^0.22.8",
+    "nearby": "^0.0.3",
+    "parcel-bundler": "^1.12.5",
+    "stats.js": "^0.17.0",
+    "three": "^0.152.2",
+    "three-obj-loader": "^1.1.3"
+  }
+}
