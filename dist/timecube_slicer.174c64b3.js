@@ -40790,6 +40790,25 @@ var forceRefreshDisplay = true;
 var areArraysReady = false;
 var debug = false; //set to true if you want to see fps counter, remove loading screen.
 
+// Set up material variables here, so we can have fun messing with 'em :)
+var uniforms = {
+  //These are defaults for brightness threshold options
+  color: {
+    value: new THREE.Color(0xffffff)
+  },
+  brightnessThreshold: {
+    value: 0.5
+  },
+  //set `value: 0.5` for 50% threshhold
+  size: {
+    value: 0.2
+  },
+  // this defines the size of the points in the point cloud
+  invertAlpha: {
+    value: false
+  } // this defines if the alpha channel is inverted or not in translucency
+};
+
 // Scene, Camera, Renderer
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -40808,6 +40827,14 @@ var controls = new _OrbitControls.OrbitControls(camera, renderer.domElement);
 
 //create GUI
 var gui = new dat.GUI();
+//add GUI folders
+var timecubeFolder = gui.addFolder('General Settings');
+var planeFolder = gui.addFolder('Plane Controls');
+var shaderFolder = gui.addFolder('Shader Controls');
+// Make sure all main folders are open, subfolders closed
+timecubeFolder.open();
+planeFolder.open();
+shaderFolder.open();
 
 //instantiating fps counter if debugging mode is on
 var fpsCounter = new _stats.default();
@@ -40834,7 +40861,7 @@ var params = {
   }
 };
 // Add .ply loader to GUI
-gui.add(params, 'loadFile').name('(click to load custom PLY file)').onChange(function (value) {
+timecubeFolder.add(params, 'loadFile').name('Load Custom PLY File [you might have to try twice]').onChange(function (value) {
   var fileInput = document.getElementById('plyFile');
   var file = fileInput.files[0];
   if (!file) {
@@ -40897,15 +40924,6 @@ var planeContainer = new THREE.Object3D(); //this is what we are rotating around
 planeContainer.add(plane);
 scene.add(planeContainer);
 
-//add GUI folders
-var timecubeFolder = gui.addFolder('Timecube Controls');
-var planeFolder = gui.addFolder('Plane Controls');
-var shaderFolder = gui.addFolder('Shader Controls');
-// Make sure all folders are open
-timecubeFolder.open();
-planeFolder.open();
-shaderFolder.open();
-
 //directions to manipulate plane in, and setting vars to check if user is moving the plane
 planeFolder.add(plane.position, 'z', -100, 100).name('Plane Position').onChange(function () {
   doWhileMoving();
@@ -40941,33 +40959,25 @@ planeFolder.add(showPlane, 'value').name('Hide Plane').onChange(function () {
 });
 planeFolder.open(); //have the folder start off with all options showing
 
-// Set up materials here, before loading mesh
-var uniforms = {
-  //These are defaults for brightness threshold options
-  color: {
-    value: new THREE.Color(0xffffff)
-  },
-  brightnessThreshold: {
-    value: 0.5
-  },
-  //set `value: 0.5` for 50% threshhold
-  size: {
-    value: 0.2
-  },
-  // this defines the size of the points in the point cloud
-  invertAlpha: {
-    value: 1
-  } // this defines if the alpha channel is inverted or not in translucency
-};
-
-basicMaterial = new THREE.PointsMaterial({
-  size: 0.2,
-  vertexColors: true
-}); //`size: 0.2`, usually
+// Set up different material properties
+basicMaterial = new THREE.ShaderMaterial({
+  uniforms: uniforms,
+  vertexShader: "\n        uniform float size;\n        varying vec3 vColor;\n        \n        void main() {\n            vColor = color;\n            vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n            gl_PointSize = size * ( 300.0 / -mvPosition.z );\n            gl_Position = projectionMatrix * mvPosition;\n        }\n    ",
+  fragmentShader: "\n        uniform vec3 color;\n        varying vec3 vColor;\n        \n        void main() {\n                gl_FragColor = vec4( vColor * color, 1.0 );\n        }\n    ",
+  transparent: false,
+  // Basic material is opaque
+  depthTest: true,
+  //set to true, as false will make the object render on top of everything else
+  depthWrite: true,
+  // set to false for translucent objects
+  vertexColors: true,
+  // ensures that the colors from geometry.attributes.color are used
+  blending: THREE.NormalBlending
+});
 thresholdMaterial = new THREE.ShaderMaterial({
   uniforms: uniforms,
   vertexShader: "\n        uniform float size;\n        varying vec3 vColor;\n        \n        void main() {\n            vColor = color;\n            vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n            gl_PointSize = size * ( 300.0 / -mvPosition.z );\n            gl_Position = projectionMatrix * mvPosition;\n        }\n    ",
-  fragmentShader: "\n        uniform vec3 color;\n        uniform float brightnessThreshold;\n        varying vec3 vColor;\n        \n        void main() {\n            float brightness = dot(vColor, vec3(0.299, 0.587, 0.114)); // correct way to calculate brightness\n            if (brightness < brightnessThreshold) {\n                discard;\n            } else {\n                gl_FragColor = vec4( vColor * color, 1.0 );\n            }\n        }\n    ",
+  fragmentShader: "\n        uniform vec3 color;\n        uniform float brightnessThreshold;\n        uniform int invertAlpha;\n        varying vec3 vColor;\n        \n        void main() {\n            float brightness = dot(vColor, vec3(0.299, 0.587, 0.114)); // calculate brightness\n            if (invertAlpha == 0) {\n                brightness = 1.0 - brightness;\n            }\n            if (brightness < brightnessThreshold) {\n                discard;\n            } else {\n                gl_FragColor = vec4( vColor * color, 1.0 );\n            }\n        }\n    ",
   transparent: true,
   depthTest: true,
   //set to true, as false will make the object render on top of everything else
@@ -40980,21 +40990,20 @@ thresholdMaterial = new THREE.ShaderMaterial({
 translucentMaterial = new THREE.ShaderMaterial({
   uniforms: uniforms,
   vertexShader: "\n        uniform float size;\n        varying vec3 vColor;\n        \n        void main() {\n            vColor = color;\n            vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n            gl_PointSize = size * ( 300.0 / -mvPosition.z );\n            gl_Position = projectionMatrix * mvPosition;\n        }\n    ",
-  fragmentShader: "\n        uniform vec3 color;\n        uniform float brightnessThreshold;\n        uniform int invertAlpha;\n        varying vec3 vColor;\n        \n        void main() {\n            float brightness = dot(vColor, vec3(0.299, 0.587, 0.114));\n            float alpha = brightness;\n            if (invertAlpha == 1) {\n                alpha = 1.0 - alpha;\n            }\n            gl_FragColor = vec4( vColor * color, alpha );\n        }\n    ",
+  fragmentShader: "\n        uniform vec3 color;\n        uniform float brightnessThreshold;\n        uniform int invertAlpha;\n        varying vec3 vColor;\n        \n        void main() {\n            float brightness = dot(vColor, vec3(0.299, 0.587, 0.114));\n            float alpha = brightness;\n            if (invertAlpha == 0) {\n                alpha = 1.0 - alpha;\n            }\n            gl_FragColor = vec4( vColor * color, alpha );\n        }\n    ",
   transparent: true,
   depthTest: true,
   // enable depth testing
   depthWrite: false,
   // disable depth writing
   vertexColors: true,
-  //blending: THREE.NormalBlending
-  blending: THREE.CustomBlending,
-  blendSrc: THREE.SrcAlphaFactor,
-  blendDst: THREE.OneMinusSrcAlphaFactor,
-  blendEquation: THREE.AddEquation
+  blending: THREE.NormalBlending
 });
-material = basicMaterial; //initialize material, should be basicMaterial normally
+// Initialize material, should be basicMaterial normally
+material = basicMaterial;
 
+// Shader GUI stuff
+shaderFolder.add(uniforms.size, 'value', 0, 1).name('Voxel size'); // Add size option to GUI
 // Choose transparency shader.
 var toggleTransparency = {
   value: 0
@@ -41006,28 +41015,26 @@ shaderFolder.add(toggleTransparency, 'value', {
 }).name('Transparency').onChange(function (value) {
   var storeToggle = [basicMaterial, thresholdMaterial, translucentMaterial];
   points.material = storeToggle[value];
-  if (shaderFolder.__controllers[1]) {
+  if (shaderFolder.__controllers[2]) {
     //if extra option exists and shouldn't be, remove
-    if (shaderFolder.__controllers[2]) {
-      shaderFolder.__controllers[2].remove();
+    if (shaderFolder.__controllers[3]) {
+      shaderFolder.__controllers[3].remove();
     } //in case another's out there
-    shaderFolder.__controllers[1].remove(); // = true;
+    shaderFolder.__controllers[2].remove(); // = true;
   }
 
   if (value == 1) {
     //if threshold shader is on, show extra options
     //bThreshold.value = 0.5 //reset to default
-    shaderFolder.add(bThreshold, 'value', 0, 1).name('Brightness-Based Threshold').onChange(function (value) {
+    shaderFolder.add(bThreshold, 'value', 0, 1).name('Cut-off Level').onChange(function (value) {
       thresholdMaterial.uniforms.brightnessThreshold.value = value;
     });
+    // Invert if max cutoff is for white or black
+    shaderFolder.add(uniforms.invertAlpha, 'value').name('Invert');
   } else if (value == 2) {
     //if transculency shader is on, show extra options
-    var invertTranslucency = {
-      value: false
-    };
-    shaderFolder.add(invertTranslucency, 'value').name('Invert').onChange(function (value) {
-      translucentMaterial.uniforms.invertAlpha.value = value; // Invert if max opacity is on white or black
-    });
+    // Invert if max opacity is on white or black
+    shaderFolder.add(uniforms.invertAlpha, 'value').name('Invert');
   }
 });
 
@@ -41047,6 +41054,8 @@ function loadPly(url) {
     material.needsUpdate = true;
     points = new THREE.Points(geometry, material);
     scene.add(points);
+    // And make the scene update
+    doWhileMoving();
 
     // Create the grid after the points have been added to the scene
     grid = (0, _nearestNeighbor.createGrid)(points, cellSize);
@@ -41194,7 +41203,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55119" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52737" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
