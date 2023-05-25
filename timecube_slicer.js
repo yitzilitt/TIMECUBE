@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+//import { MeshWboitMaterial, WboitPass } from 'three-wboit';
 import * as dat from 'dat.gui';
 import { createGrid, findNearestNeighbor } from './nearestNeighbor.js'; //import custom code
 import Stats from 'stats.js' //check framerate
@@ -15,9 +16,9 @@ let nameOfPLY = 'timecube.ply'; //replace with name of .ply file to load
 let plane;
 let planeIsMoving = true; //flag to indicate whether the plane has moved, begins as on
 let points;
-let displayWidth = 50;
+let displayWidth = 100;
 let displayWidthOriginal = displayWidth; //in order to reset display to original once we change it
-let displayHeight = 50;
+let displayHeight = 100;
 let displayHeightOriginal = displayHeight; //in order to reset display to original once we change it
 const lowResWidth = displayWidth / 2;
 const lowResHeight = displayHeight / 2;
@@ -47,6 +48,9 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 // Set camera position
 camera.position.z = 5;
+
+//transparency settings
+renderer.setTransparentSort
 
 // Orbit Controls
 const controls = new OrbitControls(camera, renderer.domElement);

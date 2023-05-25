@@ -40757,6 +40757,7 @@ function _iterableToArrayLimit(arr, i) { var _i = null == arr ? null : "undefine
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; } //to run in local server: go to Command Prompt, 
 //navigate to folder with this script, and type: `npx parcel index.html --public-url ./`
 //Then, you can go to http://localhost:1234/ in your web browser to see it.
+//import { MeshWboitMaterial, WboitPass } from 'three-wboit';
 //import custom code
 //check framerate
 //Declaring (most) global variables here
@@ -40764,9 +40765,9 @@ var nameOfPLY = 'timecube.ply'; //replace with name of .ply file to load
 var plane;
 var planeIsMoving = true; //flag to indicate whether the plane has moved, begins as on
 var points;
-var displayWidth = 50;
+var displayWidth = 100;
 var displayWidthOriginal = displayWidth; //in order to reset display to original once we change it
-var displayHeight = 50;
+var displayHeight = 100;
 var displayHeightOriginal = displayHeight; //in order to reset display to original once we change it
 var lowResWidth = displayWidth / 2;
 var lowResHeight = displayHeight / 2;
@@ -40798,6 +40799,9 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 // Set camera position
 camera.position.z = 5;
+
+//transparency settings
+renderer.setTransparentSort;
 
 // Orbit Controls
 var controls = new _OrbitControls.OrbitControls(camera, renderer.domElement);
@@ -41169,7 +41173,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57346" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51757" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
