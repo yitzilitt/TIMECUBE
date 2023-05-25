@@ -1,12 +1,15 @@
 const { send } = require('micro');
+const { pipeline } = require('stream');
+const { promisify } = require('util');
 const multer  = require('multer');
 const fs = require('fs');
 const upload = multer({ dest: '/tmp/' });
 
 const uploadMiddleware = upload.single('filename');
+const pipelineAsync = promisify(pipeline);
 
 module.exports = async (req, res) => {
-  uploadMiddleware(req, res, function(err) {
+  uploadMiddleware(req, res, async function(err) {
     if (err instanceof multer.MulterError) {
       send(res, 500, err);
       return;
@@ -27,12 +30,19 @@ module.exports = async (req, res) => {
 
       // Write operation result to new file
       const outputPath = `/tmp/edited_${req.file.originalname}`;
-      fs.writeFile(outputPath, newData, function(err) {
+      fs.writeFile(outputPath, newData, async function(err) {
         if (err) return send(res, 500, err);
         console.log('File edited successfully!');
 
         // Send file download response
-        res.download(outputPath);
+        res.setHeader('Content-disposition', 'attachment; filename=' + req.file.originalname);
+        res.setHeader('Content-type', req.file.mimetype);
+        
+        const readStream = fs.createReadStream(outputPath);
+        await pipelineAsync(readStream, res).catch((err) => {
+          console.error('Error occurred:', err);
+          send(res, 500, err);
+        });
       });
     });
   });
