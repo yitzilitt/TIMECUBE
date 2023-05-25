@@ -12,7 +12,7 @@ import Stats from 'stats.js' //check framerate
 
 
 //Declaring (most) global variables here
-let nameOfPLY = 'timecube.ply'; //replace with name of .ply file to load
+let defaultPlyFile = 'timecube.ply'; //replace with name of default .ply file to load
 let plane;
 let planeIsMoving = true; //flag to indicate whether the plane has moved, begins as on
 let points;
@@ -37,7 +37,7 @@ let planeTexture;
 let updateAfterMoving = false; //new flag
 let forceRefreshDisplay = true;
 let areArraysReady = false;
-let debug = false; //set to true if you want to see fps counter, etc.
+let debug = false; //set to true if you want to see fps counter, remove loading screen.
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
@@ -54,6 +54,9 @@ renderer.setTransparentSort
 
 // Orbit Controls
 const controls = new OrbitControls(camera, renderer.domElement);
+
+//create GUI
+const gui = new dat.GUI();
 
 
 //instantiating fps counter if debugging mode is on
@@ -74,6 +77,28 @@ function doWhileMoving() {
 }
 
 
+// Let user upload .ply file of their choice
+var params = {
+    loadFile : function() { 
+            document.getElementById('plyFile').click();
+    }
+};
+// Add .ply loader to GUI
+gui.add(params, 'loadFile').name('(click to load custom PLY file)').onChange(function(value) {
+    const fileInput = document.getElementById('plyFile');
+    const file = fileInput.files[0];
+    if (!file) {
+        console.log('No file selected!');
+        return;
+    }
+
+    // This line creates a URL representing the File object
+    const url = URL.createObjectURL(file);
+    
+    // Now load the PLY from the generated URL
+    loadPly(url);
+    }
+);
 
 //add red cube in center for debugging + troubleshooting
 var testCubeGeometry = new THREE.BoxGeometry(1, 1, 1);
@@ -120,9 +145,14 @@ scene.add(planeContainer);
 
 
 
-//create GUI
-const gui = new dat.GUI();
-const planeFolder = gui.addFolder('Basic Controls');
+//add GUI folders
+const timecubeFolder = gui.addFolder('Timecube Controls');
+const planeFolder = gui.addFolder('Plane Controls');
+const shaderFolder = gui.addFolder('Shader Controls');
+// Make sure all folders are open
+timecubeFolder.open();
+planeFolder.open();
+shaderFolder.open();
 
 //directions to manipulate plane in, and setting vars to check if user is moving the plane
 planeFolder.add(plane.position, 'z', -100, 100).name('Plane Position').onChange(function() {doWhileMoving()}); //coordinates are how far to go in either direction
@@ -158,7 +188,6 @@ let userFriendly = {
     plane.layers.toggle( 0 );
   });
 planeFolder.open(); //have the folder start off with all options showing
-
 
 
 // Set up materials here, before loading mesh
@@ -247,28 +276,22 @@ material = basicMaterial; //initialize material, should be basicMaterial normall
 
 // Choose transparency shader.
 let toggleTransparency = { value: 0 };
-planeFolder.add(toggleTransparency, 'value', { Normal: 0, Threshold: 1, Translucent: 2 }).name('Transparency').onChange(function(value) {
+shaderFolder.add(toggleTransparency, 'value', { Normal: 0, Threshold: 1, Translucent: 2 }).name('Transparency').onChange(function(value) {
     const storeToggle = [basicMaterial, thresholdMaterial, translucentMaterial];    
     points.material = storeToggle[value];
-    if (planeFolder.__controllers[6]) { //if extra option exists and shouldn't be, remove
-        if(planeFolder.__controllers[7]) {planeFolder.__controllers[7].remove();} //in case another's out there
-        planeFolder.__controllers[6].remove(); // = true;
+    if (shaderFolder.__controllers[1]) { //if extra option exists and shouldn't be, remove
+        if(shaderFolder.__controllers[2]) {shaderFolder.__controllers[2].remove();} //in case another's out there
+        shaderFolder.__controllers[1].remove(); // = true;
     }
 
     if (value == 1) { //if threshold shader is on, show extra options
         //bThreshold.value = 0.5 //reset to default
-        planeFolder.add(bThreshold, 'value', 0, 1).name('Brightness-Based Threshold').onChange(function(value) {
+        shaderFolder.add(bThreshold, 'value', 0, 1).name('Brightness-Based Threshold').onChange(function(value) {
             thresholdMaterial.uniforms.brightnessThreshold.value = value;
         });
     } else if (value == 2) { //if transculency shader is on, show extra options
-        //bThreshold.value = 0.0 //set to nothing so it doesn't interfere
-
-        planeFolder.add(bThreshold, 'value', 0, 1).name('Brightness-Based Threshold').onChange(function(value) {
-        thresholdMaterial.uniforms.brightnessThreshold.value = value;
-        });
-
         let invertTranslucency = { value: false };
-        planeFolder.add(invertTranslucency, 'value').name('Invert').onChange(function(value) {
+        shaderFolder.add(invertTranslucency, 'value').name('Invert').onChange(function(value) {
             translucentMaterial.uniforms.invertAlpha.value = value; // Invert if max opacity is on white or black
         });
     }
@@ -277,46 +300,44 @@ planeFolder.add(toggleTransparency, 'value', { Normal: 0, Threshold: 1, Transluc
 
 
 //.ply loader
-const loader = new PLYLoader();
-loader.load(nameOfPLY, function (geometry) {
-    geometry.rotateZ(Math.PI);
-    geometry.center(); 
-    //const material = new THREE.PointsMaterial({ size: 0.2, vertexColors: true }); //`size: 0.2`, usually
-    material.needsUpdate = true;
+function loadPly(url) {
+    // Remove the old Points object from the scene, if it exists
+    if (points) {
+        scene.remove(points);
+    }
+    //load new ply file
+    const loader = new PLYLoader();
+    loader.load(url, function (geometry) {
+        // your original code here, minus the loader.load call
+        geometry.rotateZ(Math.PI);
+        geometry.center(); 
+        //const material = new THREE.PointsMaterial({ size: 0.2, vertexColors: true }); //`size: 0.2`, usually
+        material.needsUpdate = true;
 
-    points = new THREE.Points(geometry, material);
-    scene.add(points);
+        points = new THREE.Points(geometry, material);
+        scene.add(points);
 
-    // Create the grid after the points have been added to the scene
-    grid = createGrid(points, cellSize);
-
-}, undefined, function (error) {
-    console.error(error);
-});
-
-
-
-// Add GUI folder to let user filter the alpha value
-const brightnessFilterFolder = gui.addFolder('Threshold Filter');
-
-// if (toggleTransparency === 1) {
-//     getController('Brightness-Based Threshold').__li.style.display = "none";
-//   } 
-    
-// // The brightness value should be between 0 (black) and 1 (white).
-// let bThreshold = { value: 0.5 };
-// brightnessFilterFolder.add(bThreshold, 'value', 0, 1).name('Brightness-Based Threshold').onChange(function(value) {
-//     thresholdMaterial.uniforms.brightnessThreshold.value = value;
-// });
-
-// The default value for the brightness filter should be false (i.e., not enabled).
-let brightnessFilterEnabled = { value: false };
-brightnessFilterFolder.add(brightnessFilterEnabled, 'value').name('Invert').onChange(function(value) {
-    thresholdMaterial.uniforms.brightnessThreshold.value = 1 - bThreshold.value; // Invert the threshold value
-});
-if (points) {
-    brightnessFilterFolder.show();
+        // Create the grid after the points have been added to the scene
+        grid = createGrid(points, cellSize);
+    }, undefined, function (error) {
+        console.error(error);
+    });
 }
+// Load a default PLY file from a URL when the script runs
+loadPly(defaultPlyFile);
+
+
+
+// // Add GUI folder to let user filter the alpha value
+// const brightnessFilterFolder = gui.addFolder('Threshold Filter');
+// // The default value for the brightness filter should be false (i.e., not enabled).
+// let brightnessFilterEnabled = { value: false };
+// brightnessFilterFolder.add(brightnessFilterEnabled, 'value').name('Invert').onChange(function(value) {
+//     thresholdMaterial.uniforms.brightnessThreshold.value = 1 - bThreshold.value; // Invert the threshold value
+// });
+// if (points) {
+//     brightnessFilterFolder.show();
+// }
 
 
 
@@ -406,7 +427,7 @@ function animate() {
     fpsCounter.begin()
 
     //check if loading is finished or not
-    if (points){
+    if (points || debug){
         document.getElementById('overlay').style.display = 'none'; // hide loading overlay
     }    
 
