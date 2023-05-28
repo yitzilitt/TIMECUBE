@@ -40788,7 +40788,7 @@ var planeTexture;
 var updateAfterMoving = false; //new flag
 var forceRefreshDisplay = true;
 var areArraysReady = false;
-var debug = false; //set to true if you want to see fps counter, remove loading screen.
+var debug = true; //set to true if you want to see fps counter, remove loading screen.
 
 // Set up material variables here, so we can have fun messing with 'em :)
 var uniforms = {
@@ -40796,6 +40796,11 @@ var uniforms = {
   color: {
     value: new THREE.Color(0xffffff)
   },
+  //threshold color to check against
+  backColor: {
+    value: new THREE.Color(0xffffff)
+  },
+  //background color of scene
   brightnessThreshold: {
     value: 0.5
   },
@@ -40876,6 +40881,18 @@ timecubeFolder.add(params, 'loadFile').name('Load Custom PLY File [you might hav
   loadPly(url);
 });
 
+// Set background color
+var backColor = {
+  color: 'rgb(0, 0, 0)'
+  //color: [0,0,0],
+};
+
+timecubeFolder.addColor(backColor, 'color').name('Background').onChange(function (value) {
+  scene.background = new THREE.Color(backColor.color);
+});
+;
+scene.background = new THREE.Color(backColor.color);
+
 //add red cube in center for debugging + troubleshooting
 var testCubeGeometry = new THREE.BoxGeometry(1, 1, 1);
 var testCubeMaterial = new THREE.MeshBasicMaterial({
@@ -40929,7 +40946,7 @@ planeFolder.add(plane.position, 'z', -100, 100).name('Plane Position').onChange(
   doWhileMoving();
 }); //coordinates are how far to go in either direction
 // Create objects to hold the user-friendly rotation values
-var userFriendly = {
+var planeRotationHolder = {
   rotationX: 0,
   rotationY: 0,
   rotationZ: 0
@@ -40937,15 +40954,15 @@ var userFriendly = {
 function mapValue(value, start1, stop1, start2, stop2) {
   return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
 }
-planeFolder.add(userFriendly, 'rotationX', -180, 180).name('Plane Rotation X').onChange(function (value) {
+planeFolder.add(planeRotationHolder, 'rotationX', -180, 180).name('Plane Rotation X').onChange(function (value) {
   planeContainer.rotation.x = mapValue(value, -180, 180, -Math.PI, Math.PI);
   doWhileMoving();
 });
-planeFolder.add(userFriendly, 'rotationY', -180, 180).name('Plane Rotation Y').onChange(function (value) {
+planeFolder.add(planeRotationHolder, 'rotationY', -180, 180).name('Plane Rotation Y').onChange(function (value) {
   planeContainer.rotation.y = mapValue(value, -180, 180, -Math.PI, Math.PI);
   doWhileMoving();
 });
-planeFolder.add(userFriendly, 'rotationZ', -180, 180).name('Plane Rotation Z').onChange(function (value) {
+planeFolder.add(planeRotationHolder, 'rotationZ', -180, 180).name('Plane Rotation Z').onChange(function (value) {
   planeContainer.rotation.z = mapValue(value, -180, 180, -Math.PI, Math.PI);
   doWhileMoving();
 });
@@ -41203,7 +41220,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52737" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50949" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

@@ -37,11 +37,12 @@ let planeTexture;
 let updateAfterMoving = false; //new flag
 let forceRefreshDisplay = true;
 let areArraysReady = false;
-let debug = false; //set to true if you want to see fps counter, remove loading screen.
+let debug = true; //set to true if you want to see fps counter, remove loading screen.
 
 // Set up material variables here, so we can have fun messing with 'em :)
 let uniforms = { //These are defaults for brightness threshold options
-    color: { value: new THREE.Color(0xffffff) },
+    color: { value: new THREE.Color(0xffffff) }, //threshold color to check against
+    backColor: {value: new THREE.Color(0xffffff) }, //background color of scene
     brightnessThreshold: { value: 0.5 }, //set `value: 0.5` for 50% threshhold
     size: { value: 0.2 }, // this defines the size of the points in the point cloud
     invertAlpha: { value: false } // this defines if the alpha channel is inverted or not in translucency
@@ -117,6 +118,15 @@ timecubeFolder.add(params, 'loadFile').name('Load Custom PLY File [you might hav
 );
 
 
+// Set background color
+let backColor = {
+    color: 'rgb(0, 0, 0)',
+    //color: [0,0,0],
+}
+timecubeFolder.addColor( backColor, 'color' ).name('Background').onChange(function(value) {
+    scene.background = new THREE.Color( backColor.color )});;
+scene.background = new THREE.Color( backColor.color );
+
 //add red cube in center for debugging + troubleshooting
 var testCubeGeometry = new THREE.BoxGeometry(1, 1, 1);
 var testCubeMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
@@ -164,7 +174,7 @@ scene.add(planeContainer);
 //directions to manipulate plane in, and setting vars to check if user is moving the plane
 planeFolder.add(plane.position, 'z', -100, 100).name('Plane Position').onChange(function() {doWhileMoving()}); //coordinates are how far to go in either direction
 // Create objects to hold the user-friendly rotation values
-let userFriendly = {
+let planeRotationHolder = {
     rotationX: 0,
     rotationY: 0,
     rotationZ: 0,
@@ -174,17 +184,17 @@ let userFriendly = {
     return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
   }
   
-  planeFolder.add(userFriendly, 'rotationX', -180, 180).name('Plane Rotation X').onChange(function(value) {
+  planeFolder.add(planeRotationHolder, 'rotationX', -180, 180).name('Plane Rotation X').onChange(function(value) {
     planeContainer.rotation.x = mapValue(value, -180, 180, -Math.PI, Math.PI);
     doWhileMoving();
   });
   
-  planeFolder.add(userFriendly, 'rotationY', -180, 180).name('Plane Rotation Y').onChange(function(value) {
+  planeFolder.add(planeRotationHolder, 'rotationY', -180, 180).name('Plane Rotation Y').onChange(function(value) {
     planeContainer.rotation.y = mapValue(value, -180, 180, -Math.PI, Math.PI);
     doWhileMoving();
   });
   
-  planeFolder.add(userFriendly, 'rotationZ', -180, 180).name('Plane Rotation Z').onChange(function(value) {
+  planeFolder.add(planeRotationHolder, 'rotationZ', -180, 180).name('Plane Rotation Z').onChange(function(value) {
     planeContainer.rotation.z = mapValue(value, -180, 180, -Math.PI, Math.PI);
     doWhileMoving();
   });
