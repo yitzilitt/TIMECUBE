@@ -8,6 +8,11 @@ const upload = multer({ dest: '/tmp/' });
 const uploadMiddleware = upload.single('filename');
 const pipelineAsync = promisify(pipeline);
 
+function editFile(data){
+  //add code to edit file here
+  const newData = data + '\nAppend some text here!';
+};
+
 module.exports = async (req, res) => {
   uploadMiddleware(req, res, async function(err) {
     if (err instanceof multer.MulterError) {
@@ -25,8 +30,8 @@ module.exports = async (req, res) => {
     fs.readFile(req.file.path, 'utf8', function(err, data) {
       if (err) return send(res, 500, err);
 
-      // Perform operation on file
-      const newData = data + '\nAppend some text here!';
+      //const newData = data + '\nAppend some text here!';
+      editFile(data);
 
       // Write operation result to new file
       const outputPath = `/tmp/edited_${req.file.originalname}`;

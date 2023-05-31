@@ -40788,7 +40788,7 @@ var planeTexture;
 var updateAfterMoving = false; //new flag
 var forceRefreshDisplay = true;
 var areArraysReady = false;
-var debug = true; //set to true if you want to see fps counter, remove loading screen.
+var debug = false; //set to true if you want to see fps counter, remove loading screen.
 
 // Set up material variables here, so we can have fun messing with 'em :)
 var uniforms = {
@@ -40859,27 +40859,64 @@ function doWhileMoving() {
   });
 }
 
-// Let user upload .ply file of their choice
-var params = {
-  loadFile: function loadFile() {
-    document.getElementById('plyFile').click();
-  }
-};
-// Add .ply loader to GUI
-timecubeFolder.add(params, 'loadFile').name('Load Custom PLY File [you might have to try twice]').onChange(function (value) {
-  var fileInput = document.getElementById('plyFile');
-  var file = fileInput.files[0];
-  if (!file) {
-    console.log('No file selected!');
-    return;
-  }
+// Let user upload their own .ply timecube files
+function userPlyUploadOption() {
+  // Set up file input event listener
+  document.getElementById('plyFile').addEventListener('change', function (event) {
+    var file = event.target.files[0];
+    if (!file) {
+      console.log('No file selected!');
+      return;
+    }
 
-  // This line creates a URL representing the File object
-  var url = URL.createObjectURL(file);
+    // This line creates a URL representing the File object
+    var url = URL.createObjectURL(file);
 
-  // Now load the PLY from the generated URL
-  loadPly(url);
-});
+    // Now load the PLY from the generated URL
+    loadPly(url);
+  });
+
+  // Let user upload .ply file of their choice
+  var params = {
+    loadFile: function loadFile() {
+      document.getElementById('plyFile').click();
+    }
+  };
+  // Add .ply loader to GUI
+  timecubeFolder.add(params, 'loadFile').name('Load Custom PLY File');
+}
+// Call the function
+userPlyUploadOption();
+
+// Let user upload their own video files to be converted to timecube
+function userVidUploadOption() {
+  // Set up file input event listener
+  document.getElementById('vidFile').addEventListener('change', function (event) {
+    var file = event.target.files[0];
+    if (!file) {
+      console.log('No file selected!');
+      return;
+    }
+
+    // This line creates a URL representing the File object
+    var url = URL.createObjectURL(file);
+
+    // Now turn the video into a .ply file, and load it
+    //[insert code here]
+    //loadPly(url);
+  });
+
+  // Let user upload .ply file of their choice
+  var params = {
+    loadFile: function loadFile() {
+      document.getElementById('vidFile').click();
+    }
+  };
+  // Add .ply loader to GUI
+  timecubeFolder.add(params, 'loadFile').name('Upload Video');
+}
+// Call the function
+userVidUploadOption();
 
 // Set background color
 var backColor = {
@@ -40941,40 +40978,45 @@ var planeContainer = new THREE.Object3D(); //this is what we are rotating around
 planeContainer.add(plane);
 scene.add(planeContainer);
 
-//directions to manipulate plane in, and setting vars to check if user is moving the plane
-planeFolder.add(plane.position, 'z', -100, 100).name('Plane Position').onChange(function () {
-  doWhileMoving();
-}); //coordinates are how far to go in either direction
-// Create objects to hold the user-friendly rotation values
-var planeRotationHolder = {
-  rotationX: 0,
-  rotationY: 0,
-  rotationZ: 0
-};
-function mapValue(value, start1, stop1, start2, stop2) {
-  return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
-}
-planeFolder.add(planeRotationHolder, 'rotationX', -180, 180).name('Plane Rotation X').onChange(function (value) {
-  planeContainer.rotation.x = mapValue(value, -180, 180, -Math.PI, Math.PI);
-  doWhileMoving();
-});
-planeFolder.add(planeRotationHolder, 'rotationY', -180, 180).name('Plane Rotation Y').onChange(function (value) {
-  planeContainer.rotation.y = mapValue(value, -180, 180, -Math.PI, Math.PI);
-  doWhileMoving();
-});
-planeFolder.add(planeRotationHolder, 'rotationZ', -180, 180).name('Plane Rotation Z').onChange(function (value) {
-  planeContainer.rotation.z = mapValue(value, -180, 180, -Math.PI, Math.PI);
-  doWhileMoving();
-});
+// Allow user to manipulate the loaction and visibility of the plane
+function planeManipulation() {
+  //directions to manipulate plane in, and setting vars to check if user is moving the plane
+  planeFolder.add(plane.position, 'z', -100, 100).name('Plane Position').onChange(function () {
+    doWhileMoving();
+  }); //coordinates are how far to go in either direction
+  // Create objects to hold the user-friendly rotation values
+  var planeRotationHolder = {
+    rotationX: 0,
+    rotationY: 0,
+    rotationZ: 0
+  };
+  function mapValue(value, start1, stop1, start2, stop2) {
+    return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
+  }
+  planeFolder.add(planeRotationHolder, 'rotationX', -180, 180).name('Plane Rotation X').onChange(function (value) {
+    planeContainer.rotation.x = mapValue(value, -180, 180, -Math.PI, Math.PI);
+    doWhileMoving();
+  });
+  planeFolder.add(planeRotationHolder, 'rotationY', -180, 180).name('Plane Rotation Y').onChange(function (value) {
+    planeContainer.rotation.y = mapValue(value, -180, 180, -Math.PI, Math.PI);
+    doWhileMoving();
+  });
+  planeFolder.add(planeRotationHolder, 'rotationZ', -180, 180).name('Plane Rotation Z').onChange(function (value) {
+    planeContainer.rotation.z = mapValue(value, -180, 180, -Math.PI, Math.PI);
+    doWhileMoving();
+  });
 
-//let player turn plane invisible (by default shown) by toggling which layer its on
-var showPlane = {
-  value: false
-};
-planeFolder.add(showPlane, 'value').name('Hide Plane').onChange(function () {
-  plane.layers.toggle(0);
-});
-planeFolder.open(); //have the folder start off with all options showing
+  //let player turn plane invisible (by default shown) by toggling which layer its on
+  var showPlane = {
+    value: false
+  };
+  planeFolder.add(showPlane, 'value').name('Hide Plane').onChange(function () {
+    plane.layers.toggle(0);
+  });
+  planeFolder.open(); //have the folder start off with all options showing
+}
+
+planeManipulation();
 
 // Set up different material properties
 basicMaterial = new THREE.ShaderMaterial({
@@ -41060,6 +41102,7 @@ function loadPly(url) {
   // Remove the old Points object from the scene, if it exists
   if (points) {
     scene.remove(points);
+    points = null;
   }
   //load new ply file
   var loader = new _PLYLoader.PLYLoader();
@@ -41177,6 +41220,8 @@ function animate() {
   //check if loading is finished or not
   if (points || debug) {
     document.getElementById('overlay').style.display = 'none'; // hide loading overlay
+  } else {
+    document.getElementById('overlay').style.display = 'flex';
   }
 
   //update and draw canvas on plane and GUI
@@ -41220,7 +41265,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50949" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64758" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
