@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import open3d as o3d
 
 def resize_video(input_video, output_video, target_height, target_frames, cut_first_frames=0, cut_last_frames=0):
     # Open the input video
@@ -44,8 +43,21 @@ def resize_video(input_video, output_video, target_height, target_frames, cut_fi
     out.release()
     cv2.destroyAllWindows()
 
-def save_as_ply_file(point_cloud, output_path):
-    o3d.io.write_point_cloud(output_path, point_cloud)
+def save_as_ply_file(points, colors, output_path):
+    with open(output_path, 'w') as f:
+        f.write('ply\n')
+        f.write('format ascii 1.0\n')
+        f.write('element vertex {}\n'.format(len(points)))
+        f.write('property float x\n')
+        f.write('property float y\n')
+        f.write('property float z\n')
+        f.write('property uchar red\n')
+        f.write('property uchar green\n')
+        f.write('property uchar blue\n')
+        f.write('end_header\n')
+
+        for p, color in zip(points, colors):
+            f.write('{} {} {} {} {} {}\n'.format(p[0], p[1], p[2], color[0], color[1], color[2]))
 
 def video_to_voxels(video_path, voxel_size=1.0):
     # Read video
@@ -54,8 +66,9 @@ def video_to_voxels(video_path, voxel_size=1.0):
     frame_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    # Initialize an empty point cloud
-    point_cloud = o3d.geometry.PointCloud()
+    # Initialize an empty list for points and colors
+    points = []
+    colors = []
 
     for frame_index in range(frame_count):
         ret, frame = video.read()
@@ -65,25 +78,20 @@ def video_to_voxels(video_path, voxel_size=1.0):
         # Find all pixels
         y, x = np.mgrid[:frame_height, :frame_width]
         z = np.full_like(x, -frame_index)
-        points = np.column_stack((x.ravel(), y.ravel(), z.ravel()))
-
-        # Add points to the point cloud
-        point_cloud.points = o3d.utility.Vector3dVector(np.vstack((point_cloud.points, points)))
+        points.extend(np.column_stack((x.ravel(), y.ravel(), z.ravel())))
 
         # Get color information for each point and store it
-        colors = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        colors = colors.reshape(-1, 3) / 255.0
-        point_cloud.colors = o3d.utility.Vector3dVector(np.vstack((point_cloud.colors, colors)))
-
-    # Downsample point cloud using voxel grid filter
-    point_cloud_downsampled = point_cloud.voxel_down_sample(voxel_size)
+        color = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        color = color.reshape(-1, 3)
+        colors.extend(color)
 
     # Save as a PLY file.
     output_video = video_path + ".ply"
-    save_as_ply_file(point_cloud_downsampled, output_video)
+    save_as_ply_file(points, colors, output_video)
 
     # Release video capture object
     video.release()
+
 
 def convert_video(input_video):
     # Setup parameters
@@ -98,3 +106,6 @@ def convert_video(input_video):
     
     # Convert the video to voxels and save as a .ply file
     video_to_voxels(output_video)
+
+
+convert_video('example.mp4')
