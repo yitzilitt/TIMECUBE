@@ -24,7 +24,7 @@ This is how we normally visualize events, but there are other ways to percieve t
 
 In order to create the TIMECUBE, instead of displaying the frames of a video as seperated in time, or along the vertical/horizontal dimension, we display our frames *on top of* each other, forming a "loaf," or cubic 3D shape. At the side of our TIMECUBE closest to us, we see the first frame, directly behind that is the second frame, and so on, with the final frame of the original video displayed at the far end:
 
-
+![timecubebasicexampleimage1](https://github.com/yitzilitt/TIMECUBE/assets/28551587/ebaa61d0-c221-4a81-a896-1ba9e0c6bca1)
 
 
 ## Use Cases
