@@ -16,7 +16,7 @@ Imagine a typical video. Or don't. Whatever. I'll do the work for you:
 
 In this video, we see a man walk from left to right, go behind a tree, and sit down on a bench. The camera, and the scene as a whole, is pretty static. In fact, *nothing* in this scene is actually moving. Nothing ever truly is on film. In reality, we are simply watching a rapid sequence of still pictures, which when played quickly enough (in this case, 10 frames per second), causes our brain to percieve motion. In a traditional film reel, these pictures are physically connected, one next to the other, and are rapidly moved across a projector:
 
-![timecube example vid film strip](https://github.com/yitzilitt/TIMECUBE/assets/28551587/49f6d810-7a69-4678-8630-8ce887e06d69)
+![timecube example vid film strip (Small)](https://github.com/yitzilitt/TIMECUBE/assets/28551587/aeeb7dff-180b-4267-bde3-2169eb98838c)
 
 Congrats! You have now visualized the same event in two different ways: once as a series of still images, seperated by time (aka a "normal" video), and once as a series of still images, seperated by vertical or horizontal space (aka a film strip). No data is lost in converting from one visualization to the other, and both can be helpful in different ways. Videos are useful when trying to "spot the difference" from one frame to the next, while looking at still frames from a video can be helpful in distinguishing details which might otherwise be lost in a blur of motion.
 
@@ -26,6 +26,12 @@ In order to create the TIMECUBE, instead of displaying the frames of a video as 
 
 ![timecubebasicexampleimage1](https://github.com/yitzilitt/TIMECUBE/assets/28551587/ebaa61d0-c221-4a81-a896-1ba9e0c6bca1)
 
+(In the above visualization I have removed the lighter pixels from the scene, to make it easier to see the depth of the TIMECUBE.)
+
+# The TIMEKNIFE
+[to be added]
+
 
 ## Use Cases
+The sky is the limit! :)
 
