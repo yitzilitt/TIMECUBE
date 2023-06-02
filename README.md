@@ -10,4 +10,14 @@ Video inputs are TIMECUBIFIED into a 3-dimensional point cloud which allows the 
 
 ## Explanation
 ### Intorduction
+Imagine a typical video. Or don't. Whatever. I'll do the work for you:
+
+![man walking tree bench](https://github.com/yitzilitt/TIMECUBE/assets/28551587/d09146f2-ecdd-423d-8dcf-0406fab99d04)
+
+In this video, we see a man walk from left to right, go behind a tree, and sit down on a bench. The camera, and the scene as a whole, is pretty static. In fact, *nothing* in this scene is actually moving. Nothing ever truly is on film. In reality, we are simply watching a rapid sequence of still pictures, which when played quickly enough (in this case, 10 frames per second), causes our brain to percieve motion. In a traditional film reel, these pictures are physically connected, one on top of the other, and are rapidly moved across a projector.
+
+
+
+
+## Use Cases
 
