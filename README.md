@@ -26,14 +26,14 @@ This is how we normally visualize events, but there are other ways to percieve t
 
 In order to create the TIMECUBE, instead of displaying the frames of a video as seperated in time, or along the vertical/horizontal dimension, we display our frames *on top of* each other, forming a "loaf," or cubic 3D shape. At the side of our TIMECUBE closest to us, we see the first frame, directly behind that is the second frame, and so on, with the final frame of the original video displayed at the far end:
 
-![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/787c7070-87a4-4c26-b3ce-38aa6876378b)
+![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/ed576eca-92fd-45f3-9e89-b7c5e5a6ca1a)
 
 (In the above visualization I have removed the lighter pixels from the scene, to make it easier to see the depth of the TIMECUBE.)
 
 # The TIMEKNIFE
 An individual frame of a given video is effectivly a cross-section of that video's TIMECUBE. To retrieve a frame, we simply SLICE the TIMECUBE with a plane at the proper angle, and "paint" the plane (or TIMEKNIFE) with the nearest pixel values:
 
-![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/37e66e2f-c4fc-4f28-bcf2-88360d5d78e8)
+![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/2937dbbd-609e-464f-81d8-b539d6d10a62)
 
 If we want to recreate our original video, we can simply slide the TIMEKNIFE back and forth, and record the output:
 
