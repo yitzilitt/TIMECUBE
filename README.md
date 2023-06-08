@@ -8,6 +8,8 @@ The TIMECUBE is intended for artists, philosophers, scientists, film editors, an
 
 Video inputs are TIMECUBIFIED into a 3-dimensional point cloud which allows the pixel/color data of the entire video to be viewed at once. The cloud (or TIMECUBE) can be "sliced" (via TIMEKNIVES) to view and output 2D cross-sections of the TIMECUBE, which can be used to either reconstruct the original video, or to gain an entirely alien perspective of the world.
 
+![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/d8c8f518-1b47-4f67-9999-8a0caa38de6d)
+
 ## Explanation
 ### Intorduction
 Imagine a typical video. Or don't. Whatever. I'll do the work for you:
