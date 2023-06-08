@@ -1,14 +1,14 @@
 # TIMECUBE
 TIMECUBE is a tool for visualising [spacetime](https://en.wikipedia.org/wiki/Spacetime) from a new angle.
 
-![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/8771885f-6fa2-432a-91f4-222e16418b15)
+![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/d8c8f518-1b47-4f67-9999-8a0caa38de6d)
 
 ## About
 The TIMECUBE is intended for artists, philosophers, scientists, film editors, and those who wish to [defamiliarize](https://en.wikipedia.org/wiki/Defamiliarization) themselves with the peculiar [dimensionality](https://en.wikipedia.org/wiki/Curse_of_dimensionality) of our universe.
 
 Video inputs are TIMECUBIFIED into a 3-dimensional point cloud which allows the pixel/color data of the entire video to be viewed at once. The cloud (or TIMECUBE) can be "sliced" (via TIMEKNIVES) to view and output 2D cross-sections of the TIMECUBE, which can be used to either reconstruct the original video, or to gain an entirely alien perspective of the world.
 
-![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/d8c8f518-1b47-4f67-9999-8a0caa38de6d)
+![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/8771885f-6fa2-432a-91f4-222e16418b15)
 
 ## Explanation
 ### Intorduction
@@ -26,12 +26,22 @@ This is how we normally visualize events, but there are other ways to percieve t
 
 In order to create the TIMECUBE, instead of displaying the frames of a video as seperated in time, or along the vertical/horizontal dimension, we display our frames *on top of* each other, forming a "loaf," or cubic 3D shape. At the side of our TIMECUBE closest to us, we see the first frame, directly behind that is the second frame, and so on, with the final frame of the original video displayed at the far end:
 
-![timecubebasicexampleimage1](https://github.com/yitzilitt/TIMECUBE/assets/28551587/ebaa61d0-c221-4a81-a896-1ba9e0c6bca1)
+![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/787c7070-87a4-4c26-b3ce-38aa6876378b)
 
 (In the above visualization I have removed the lighter pixels from the scene, to make it easier to see the depth of the TIMECUBE.)
 
 # The TIMEKNIFE
-[to be added]
+An individual frame of a given video is effectivly a cross-section of that video's TIMECUBE. To retrieve a frame, we simply SLICE the TIMECUBE with a plane at the proper angle, and "paint" the plane (or TIMEKNIFE) with the nearest pixel values:
+
+![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/37e66e2f-c4fc-4f28-bcf2-88360d5d78e8)
+
+If we want to recreate our original video, we can simply slide the TIMEKNIFE along the frame:
+
+
+
+
+
+[More to be added]
 
 
 ## Use Cases
