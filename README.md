@@ -37,9 +37,15 @@ An individual frame of a given video is effectivly a cross-section of that video
 
 If we want to recreate our original video, we can simply slide the TIMEKNIFE back and forth, and record the output:
 
-![ezgif com-video-to-gif](https://github.com/yitzilitt/TIMECUBE/assets/28551587/84e480dd-0b5a-422b-a779-a65974af684b)
+![ezgif com-video-to-gif(4)](https://github.com/yitzilitt/TIMECUBE/assets/28551587/50c4ec2f-5522-4eda-ad7c-81a375dae802)
+
 
 But that isn't the only way we can use our TIMEKNIFE. The nice thing about slicing things is that with enough determination, you can slice along any angle that you want! For example...
+
+![ezgif com-video-to-gif(2)](https://github.com/yitzilitt/TIMECUBE/assets/28551587/9f6f8fe5-79dc-4d2a-8b75-b4c897ae4276)
+
+![ezgif com-video-to-gif(3)](https://github.com/yitzilitt/TIMECUBE/assets/28551587/8c4d039b-2b01-48ad-9c74-0769f0777c8d)
+
 
 
 
