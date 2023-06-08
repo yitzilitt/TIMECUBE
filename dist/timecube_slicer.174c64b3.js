@@ -40761,7 +40761,7 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; } //to run i
 //import custom code
 //check framerate
 //Declaring (most) global variables here
-var defaultPlyFile = 'timecube.ply'; //replace with name of default .ply file to load
+var defaultPlyFile = 'man walking to bench.ply'; //replace with name of default .ply file to load
 var plane;
 var planeIsMoving = true; //flag to indicate whether the plane has moved, begins as on
 var points;
@@ -40785,33 +40785,42 @@ var basicMaterial;
 var thresholdMaterial;
 var translucentMaterial;
 var planeTexture;
+var gammaPowerAmount;
 var updateAfterMoving = false; //new flag
 var forceRefreshDisplay = true;
 var areArraysReady = false;
-var debug = false; //set to true if you want to see fps counter, remove loading screen.
+var debug = false; //set to true if you want to see fps counter, other dev help stuff.
 
 // Set up material variables here, so we can have fun messing with 'em :)
 var uniforms = {
-  //These are defaults for brightness threshold options
+  // These are defaults for brightness threshold options
   color: {
     value: new THREE.Color(0xffffff)
   },
-  //threshold color to check against
+  // threshold color to check against
   backColor: {
     value: new THREE.Color(0xffffff)
   },
-  //background color of scene
+  // background color of scene
   brightnessThreshold: {
     value: 0.5
   },
-  //set `value: 0.5` for 50% threshhold
+  // set `value: 0.5` for 50% threshhold
   size: {
     value: 0.2
   },
   // this defines the size of the points in the point cloud
   invertAlpha: {
     value: false
-  } // this defines if the alpha channel is inverted or not in translucency
+  },
+  // defines if translucency alpha channel is inverted or not
+  gammaCorrection: {
+    value: 2.2
+  },
+  // defines gamma correction amount. Set to 1.0 to turn off
+  transparencyIntensity: {
+    value: 1.0
+  } //  0 would make the object completely opaque; 1 (or greater) would make the object completely transparent
 };
 
 // Scene, Camera, Renderer
@@ -40888,35 +40897,55 @@ function userPlyUploadOption() {
 // Call the function
 userPlyUploadOption();
 
-// Let user upload their own video files to be converted to timecube
-function userVidUploadOption() {
-  // Set up file input event listener
-  document.getElementById('vidFile').addEventListener('change', function (event) {
-    var file = event.target.files[0];
-    if (!file) {
-      console.log('No file selected!');
-      return;
-    }
+// // Let user upload their own video files to be converted to timecube
+// function userVidUploadOption() {
+//     // Set up file input event listener
+//     document.getElementById('vidFile').addEventListener('change', function(event) {
+//         const file = event.target.files[0];
+//         if (!file) {
+//             console.log('No file selected!');
+//             return;
+//         }
 
-    // This line creates a URL representing the File object
-    var url = URL.createObjectURL(file);
+//         // This line creates a URL representing the File object
+//         const url = URL.createObjectURL(file);
 
-    // Now turn the video into a .ply file, and load it
-    //[insert code here]
-    //loadPly(url);
-  });
+//         // Now turn the video into a .ply file, and load it
+//         // Send the video to the serverless function
+//         sendFile(file);
+//         //loadPly(url);
+//     });
 
-  // Let user upload .ply file of their choice
-  var params = {
-    loadFile: function loadFile() {
-      document.getElementById('vidFile').click();
-    }
-  };
-  // Add .ply loader to GUI
-  timecubeFolder.add(params, 'loadFile').name('Upload Video');
-}
-// Call the function
-userVidUploadOption();
+//     // Let user upload .mp4 file of their choice
+//     var params = {
+//         loadFile : function() { 
+//                 document.getElementById('vidFile').click();
+//         }
+//     };
+//     // Add .ply loader to GUI
+//     timecubeFolder.add(params, 'loadFile').name('Upload Video');
+// }
+// // Call the function
+// userVidUploadOption();
+
+// //function for sending the file over to our Python script in Vercel
+// function sendFile(file) {
+//     fetch('/api/convert', {
+//         method: 'POST',
+//         body: file
+//     })
+//     .then(response => response.blob())
+//     .then(blob => {
+//         // Create a URL for the blob
+//         const url = window.URL.createObjectURL(blob);
+
+//         // Call the loadPly function with the URL
+//         loadPly(url);
+//         if (points) {
+//             window.URL.revokeObjectURL(url);
+//         }
+//     });
+// }
 
 // Set background color
 var backColor = {
@@ -40962,14 +40991,22 @@ var bufferCtx = bufferCanvas.getContext('2d');
 
 // Create the texture here, after the canvas is created
 planeTexture = new THREE.Texture(canvas);
-planeTexture.minFilter = THREE.NearestFilter; // Disable minification filtering
-planeTexture.magFilter = THREE.NearestFilter; // Disable magnification filtering
+planeTexture.minFilter = THREE.NearestFilter; // Disable minification filtering with THREE.NearestFilter
+planeTexture.magFilter = THREE.NearestFilter; // Disable magnification filtering with THREE.NearestFilter
 
 //add intersecting plane to the scene
 var planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight); //width and height of plane
 //const planeMaterial = new THREE.MeshBasicMaterial({color: 'white', side: THREE.DoubleSide});
-var planeMaterial = new THREE.MeshBasicMaterial({
-  map: planeTexture,
+//const planeMaterial = new THREE.MeshBasicMaterial({ map: planeTexture, side: THREE.DoubleSide });
+// Modify plane material to correct gamma miscalibration problem and display the same thing canvas does
+var planeMaterial = new THREE.ShaderMaterial({
+  uniforms: {
+    map: {
+      value: planeTexture
+    }
+  },
+  vertexShader: "\n      varying vec2 vUv;\n  \n      void main() {\n        vUv = uv;\n        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n      }\n    ",
+  fragmentShader: "\n      uniform sampler2D map;\n      varying vec2 vUv;\n  \n      void main() {\n        vec4 texColor = texture2D(map, vUv);\n        vec3 color = texColor.rgb;\n  \n        vec3 gamma = vec3(1.0 / 1.0);\n        vec3 correctedColor = pow(color, gamma);\n  \n        gl_FragColor = vec4(correctedColor, 1.0);\n      }\n    ",
   side: THREE.DoubleSide
 });
 plane = new THREE.Mesh(planeGeometry, planeMaterial);
@@ -40978,7 +41015,7 @@ var planeContainer = new THREE.Object3D(); //this is what we are rotating around
 planeContainer.add(plane);
 scene.add(planeContainer);
 
-// Allow user to manipulate the loaction and visibility of the plane
+// Allow user to manipulate the location and visibility of the plane
 function planeManipulation() {
   //directions to manipulate plane in, and setting vars to check if user is moving the plane
   planeFolder.add(plane.position, 'z', -100, 100).name('Plane Position').onChange(function () {
@@ -41021,8 +41058,8 @@ planeManipulation();
 // Set up different material properties
 basicMaterial = new THREE.ShaderMaterial({
   uniforms: uniforms,
-  vertexShader: "\n        uniform float size;\n        varying vec3 vColor;\n        \n        void main() {\n            vColor = color;\n            vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n            gl_PointSize = size * ( 300.0 / -mvPosition.z );\n            gl_Position = projectionMatrix * mvPosition;\n        }\n    ",
-  fragmentShader: "\n        uniform vec3 color;\n        varying vec3 vColor;\n        \n        void main() {\n                gl_FragColor = vec4( vColor * color, 1.0 );\n        }\n    ",
+  vertexShader: "\n        uniform float size;\n        varying vec3 vColor;\n        \n        void main() {\n            vColor = color; // Original code\n            vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n            gl_PointSize = size * ( 300.0 / -mvPosition.z );\n            gl_Position = projectionMatrix * mvPosition;\n        }\n    ",
+  fragmentShader: "\n        uniform vec3 color;\n        uniform float gammaCorrection;\n        varying vec3 vColor;\n        \n        void main() {\n            vec3 gamma = vec3(1.0 / gammaCorrection);\n            vec3 correctedColor = pow(vColor, gamma);\n            gl_FragColor = vec4( correctedColor, 1.0 );\n        }\n    ",
   transparent: false,
   // Basic material is opaque
   depthTest: true,
@@ -41031,12 +41068,13 @@ basicMaterial = new THREE.ShaderMaterial({
   // set to false for translucent objects
   vertexColors: true,
   // ensures that the colors from geometry.attributes.color are used
-  blending: THREE.NormalBlending
+  blending: THREE.NoBlending // Was THREE.NormalBlending for normal scene shading
 });
+
 thresholdMaterial = new THREE.ShaderMaterial({
   uniforms: uniforms,
   vertexShader: "\n        uniform float size;\n        varying vec3 vColor;\n        \n        void main() {\n            vColor = color;\n            vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n            gl_PointSize = size * ( 300.0 / -mvPosition.z );\n            gl_Position = projectionMatrix * mvPosition;\n        }\n    ",
-  fragmentShader: "\n        uniform vec3 color;\n        uniform float brightnessThreshold;\n        uniform int invertAlpha;\n        varying vec3 vColor;\n        \n        void main() {\n            float brightness = dot(vColor, vec3(0.299, 0.587, 0.114)); // calculate brightness\n            if (invertAlpha == 0) {\n                brightness = 1.0 - brightness;\n            }\n            if (brightness < brightnessThreshold) {\n                discard;\n            } else {\n                gl_FragColor = vec4( vColor * color, 1.0 );\n            }\n        }\n    ",
+  fragmentShader: "\n        uniform vec3 color;\n        uniform float gammaCorrection;\n        uniform float brightnessThreshold;\n        uniform int invertAlpha;\n        varying vec3 vColor;\n        \n        void main() {\n            vec3 gamma = vec3(1.0 / gammaCorrection);\n            vec3 correctedColor = pow(vColor, gamma);\n\n            float brightness = dot(correctedColor, vec3(0.299, 0.587, 0.114)); // calculate brightness\n            if (invertAlpha == 0) {\n                brightness = 1.0 - brightness;\n            }\n            if (brightness < brightnessThreshold) {\n                discard;\n            } else {\n                gl_FragColor = vec4( correctedColor, 1.0 );\n            }\n        }\n    ",
   transparent: true,
   depthTest: true,
   //set to true, as false will make the object render on top of everything else
@@ -41049,7 +41087,7 @@ thresholdMaterial = new THREE.ShaderMaterial({
 translucentMaterial = new THREE.ShaderMaterial({
   uniforms: uniforms,
   vertexShader: "\n        uniform float size;\n        varying vec3 vColor;\n        \n        void main() {\n            vColor = color;\n            vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n            gl_PointSize = size * ( 300.0 / -mvPosition.z );\n            gl_Position = projectionMatrix * mvPosition;\n        }\n    ",
-  fragmentShader: "\n        uniform vec3 color;\n        uniform float brightnessThreshold;\n        uniform int invertAlpha;\n        varying vec3 vColor;\n        \n        void main() {\n            float brightness = dot(vColor, vec3(0.299, 0.587, 0.114));\n            float alpha = brightness;\n            if (invertAlpha == 0) {\n                alpha = 1.0 - alpha;\n            }\n            gl_FragColor = vec4( vColor * color, alpha );\n        }\n    ",
+  fragmentShader: "\n        uniform vec3 color;\n        uniform float gammaCorrection;\n        uniform float brightnessThreshold;\n        uniform int invertAlpha;\n        uniform float transparencyIntensity;\n        varying vec3 vColor;\n        \n        void main() {\n            vec3 gamma = vec3(1.0 / gammaCorrection);\n            vec3 correctedColor = pow(vColor, gamma);\n\n            float brightness = dot(correctedColor, vec3(0.299, 0.587, 0.114));\n            float alpha = brightness * transparencyIntensity; // Modified alpha calculation\n            if (invertAlpha == 0) {\n                alpha = 1.0 - alpha;\n            }\n            gl_FragColor = vec4( correctedColor, alpha );\n        }\n    ",
   transparent: true,
   depthTest: true,
   // enable depth testing
@@ -41062,7 +41100,8 @@ translucentMaterial = new THREE.ShaderMaterial({
 material = basicMaterial;
 
 // Shader GUI stuff
-shaderFolder.add(uniforms.size, 'value', 0, 1).name('Voxel size'); // Add size option to GUI
+shaderFolder.add(uniforms.size, 'value', 0, 2).name('Voxel Size'); // Add size option to GUI
+shaderFolder.add(uniforms.gammaCorrection, 'value', 0.1, 10).name('Gamma correction'); // change Gamma correction amount
 // Choose transparency shader.
 var toggleTransparency = {
   value: 0
@@ -41074,12 +41113,12 @@ shaderFolder.add(toggleTransparency, 'value', {
 }).name('Transparency').onChange(function (value) {
   var storeToggle = [basicMaterial, thresholdMaterial, translucentMaterial];
   points.material = storeToggle[value];
-  if (shaderFolder.__controllers[2]) {
+  if (shaderFolder.__controllers[3]) {
     //if extra option exists and shouldn't be, remove
-    if (shaderFolder.__controllers[3]) {
+    if (shaderFolder.__controllers[4]) {
       shaderFolder.__controllers[3].remove();
     } //in case another's out there
-    shaderFolder.__controllers[2].remove(); // = true;
+    shaderFolder.__controllers[3].remove(); // = true;
   }
 
   if (value == 1) {
@@ -41092,8 +41131,10 @@ shaderFolder.add(toggleTransparency, 'value', {
     shaderFolder.add(uniforms.invertAlpha, 'value').name('Invert');
   } else if (value == 2) {
     //if transculency shader is on, show extra options
-    // Invert if max opacity is on white or black
+    // Invert if max opacity is for white or black
     shaderFolder.add(uniforms.invertAlpha, 'value').name('Invert');
+    //control intensity of opacity
+    shaderFolder.add(uniforms.transparencyIntensity, 'value', 0, 8).name('Opacity');
   }
 });
 
@@ -41125,17 +41166,6 @@ function loadPly(url) {
 }
 // Load a default PLY file from a URL when the script runs
 loadPly(defaultPlyFile);
-
-// // Add GUI folder to let user filter the alpha value
-// const brightnessFilterFolder = gui.addFolder('Threshold Filter');
-// // The default value for the brightness filter should be false (i.e., not enabled).
-// let brightnessFilterEnabled = { value: false };
-// brightnessFilterFolder.add(brightnessFilterEnabled, 'value').name('Invert').onChange(function(value) {
-//     thresholdMaterial.uniforms.brightnessThreshold.value = 1 - bThreshold.value; // Invert the threshold value
-// });
-// if (points) {
-//     brightnessFilterFolder.show();
-// }
 
 // This function updates the canvas
 function updateCanvas() {
@@ -41171,7 +41201,8 @@ function updateCanvas() {
           // Store the color in the displayColors array
           displayColors[y][x] = [color.r, color.g, color.b];
         } else {
-          displayColors[y][x] = [1, 1, 1];
+          //displayColors[y][x] = [1, 1, 1]; //Original, ChatGPT says I'm wrong tho lol
+          displayColors[y][x] = [0, 0, 0];
         }
       }
     }
@@ -41198,7 +41229,14 @@ function drawFrame() {
             r = _displayColors$y$x[0],
             g = _displayColors$y$x[1],
             b = _displayColors$y$x[2];
-          bufferCtx.fillStyle = "rgb(".concat(Math.round(r * 255), ", ").concat(Math.round(g * 255), ", ").concat(Math.round(b * 255), ")");
+          // Apply gamma correction, becuase we need to do that for some reason
+          gammaPowerAmount = 1 / uniforms.gammaCorrection.value;
+          r = Math.pow(r, gammaPowerAmount);
+          g = Math.pow(g, gammaPowerAmount);
+          b = Math.pow(b, gammaPowerAmount);
+
+          //bufferCtx.fillStyle = `rgb(${Math.round(r*255)}, ${Math.round(g*255)}, ${Math.round(b*255)})`; //Original code
+          bufferCtx.fillStyle = "rgb(".concat(r * 255, ", ").concat(g * 255, ", ").concat(b * 255, ")");
           bufferCtx.fillRect(x * scaleX, y * scaleY, scaleX, scaleY); // Draw a rectangle for each pixel
         }
       }
@@ -41218,7 +41256,7 @@ function animate() {
   fpsCounter.begin();
 
   //check if loading is finished or not
-  if (points || debug) {
+  if (points) {
     document.getElementById('overlay').style.display = 'none'; // hide loading overlay
   } else {
     document.getElementById('overlay').style.display = 'flex';
@@ -41265,7 +41303,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64758" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50392" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
@@ -41410,4 +41448,4 @@ function hmrAcceptRun(bundle, id) {
   }
 }
 },{}]},{},["node_modules/parcel-bundler/src/builtins/hmr-runtime.js","timecube_slicer.js"], null)
-//# sourceMappingURL=/timecube_slicer.174c64b3.js.map
+//# sourceMappingURL=timecube_slicer.174c64b3.js.map

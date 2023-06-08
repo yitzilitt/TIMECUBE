@@ -2,12 +2,13 @@
   "name": "timecube",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
+    "start": "parcel build index.html --public-url . && electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Yitzi Litt",
   "license": "ISC",
   "dependencies": {
     "dat.gui": "^0.7.9",

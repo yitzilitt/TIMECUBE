@@ -52,38 +52,23 @@ import Stats from 'stats.js' //check framerate
 
 //Declaring (most) global variables here
 //...
-
-// Set up material variables here
+let displayWidth = 100;
+let displayWidthOriginal = displayWidth; //in order to reset display to original once we change it
+let displayHeight = 100;
+let displayHeightOriginal = displayHeight; //in order to reset display to original once we change it
+let lowResWidth = displayWidth / 2;
+let lowResHeight = displayHeight / 2;
+let planeWidth = displayWidth;
+let planeHeight = displayHeight;
 //...
 
+// Set up material variables here, so we can have fun messing with 'em :)
+//...
 // Scene, Camera, Renderer
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
-//const renderer = new THREE.WebGLRenderer( { antialias : false } ); //for fps improvements if required
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-// Set camera position
-camera.position.z = 5;
-
-//transparency settings
-renderer.setTransparentSort
-
-// Orbit Controls
-const controls = new OrbitControls(camera, renderer.domElement);
-
+//...
 //create GUI
 const gui = new dat.GUI();
-//add GUI folders
-const timecubeFolder = gui.addFolder('General Settings');
-const planeFolder = gui.addFolder('Plane Controls');
-const shaderFolder = gui.addFolder('Shader Controls');
-// Make sure all main folders are open, subfolders closed
-timecubeFolder.open();
-planeFolder.open();
-shaderFolder.open();
-
-
+//...
 //instantiating fps counter if debugging mode is on
 //...
 
@@ -96,28 +81,24 @@ function doWhileMoving() {
     displayColors = new Array(lowResHeight).fill(0).map(() => new Array(lowResWidth).fill([0, 0, 0]));
 }
 
-// Let user upload .ply file of their choice
-var params = {
-    loadFile : function() { 
-            document.getElementById('plyFile').click();
-    }
-};
-// Add .ply loader to GUI
-timecubeFolder.add(params, 'loadFile').name('Load Custom PLY File [you might have to try twice]').onChange(function(value) {
-    const fileInput = document.getElementById('plyFile');
-    const file = fileInput.files[0];
-    if (!file) {
-        console.log('No file selected!');
-        return;
-    }
-
-    // This line creates a URL representing the File object
-    const url = URL.createObjectURL(file);
-    
-    // Now load the PLY from the generated URL
+// Let user upload their own .ply timecube files
+function userPlyUploadOption() {
+    //...
+    // Load the PLY from the generated URL
     loadPly(url);
-    }
-);
+    });
+
+    // Let user upload .ply file of their choice
+    var params = {
+        loadFile : function() { 
+                document.getElementById('plyFile').click();
+        }
+    };
+    // Add .ply loader to GUI
+    timecubeFolder.add(params, 'loadFile').name('Load Custom PLY File');
+}
+// Call the function
+userPlyUploadOption();
 
 
 // Set background color
@@ -125,7 +106,6 @@ timecubeFolder.add(params, 'loadFile').name('Load Custom PLY File [you might hav
 
 //add red cube in center for debugging + troubleshooting
 //...
-
 
 // create a 2D array to store the color values for each pixel in the GUI display:
 let displayColors = new Array(displayHeight).fill(0).map(() => new Array(displayWidth).fill([0, 0, 0]));  // Initialize to black
@@ -148,48 +128,41 @@ let bufferCtx = bufferCanvas.getContext('2d');
 
 // Create the texture here, after the canvas is created
 planeTexture = new THREE.Texture(canvas);
-planeTexture.minFilter = THREE.NearestFilter; // Disable minification filtering
-planeTexture.magFilter = THREE.NearestFilter; // Disable magnification filtering
+planeTexture.minFilter = THREE.NearestFilter; // Disable minification filtering with THREE.NearestFilter
+planeTexture.magFilter = THREE.NearestFilter; // Disable magnification filtering with THREE.NearestFilter
 
+// Set up material setting for plane so it shows projection of the canvas
+// (thereby showing the nearest neighbor pixels of point cloud).
+
+//const planeMaterial = new THREE.MeshBasicMaterial({color: 'white', side: THREE.DoubleSide});
+//const planeMaterial = new THREE.MeshBasicMaterial({ map: planeTexture, side: THREE.DoubleSide });
+// Modify plane material to correct gamma miscalibration problem and display the same thing canvas does
+const planeMaterial = new THREE.ShaderMaterial({
+//...
+}); 
 
 //add intersecting plane to the scene
-const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight); //width and height of plane
-//const planeMaterial = new THREE.MeshBasicMaterial({color: 'white', side: THREE.DoubleSide});
-const planeMaterial = new THREE.MeshBasicMaterial({ map: planeTexture, side: THREE.DoubleSide });
+let planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight); //width and height of plane  
 plane = new THREE.Mesh(planeGeometry, planeMaterial);
 //have plane be child of planeContainer (an invisible point in the center of world)
 const planeContainer = new THREE.Object3D(); //this is what we are rotating around
 planeContainer.add(plane);
 scene.add(planeContainer);
 
-
-//directions to manipulate plane in, and setting vars to check if user is moving the plane
-planeFolder.add(plane.position, 'z', -100, 100).name('Plane Position').onChange(function() {doWhileMoving()}); //coordinates are how far to go in either direction
+// Allow user to manipulate the location and visibility of the plane
 //...
-
-  //let player turn plane invisible (by default shown) by toggling which layer its on
-  let showPlane = { value: false };
-  planeFolder.add(showPlane, 'value').name('Hide Plane').onChange(function() {
-    plane.layers.toggle( 0 );
-  });
-planeFolder.open(); //have the folder start off with all options showing
-
 
 // Set up different material properties
 //...
 // Initialize material, should be basicMaterial normally
 material = basicMaterial;
 
-// Shader GUI stuff
-shaderFolder.add(uniforms.size, 'value', 0, 1).name('Voxel size'); // Add size option to GUI
-// Choose transparency shader.
-//...
-
 //.ply loader
 function loadPly(url) {
     // Remove the old Points object from the scene, if it exists
     if (points) {
         scene.remove(points);
+        points = null;
     }
     //load new ply file
     const loader = new PLYLoader();
@@ -197,11 +170,28 @@ function loadPly(url) {
         // your original code here, minus the loader.load call
         geometry.rotateZ(Math.PI);
         geometry.center(); 
-        //const material = new THREE.PointsMaterial({ size: 0.2, vertexColors: true }); //`size: 0.2`, usually
-        material.needsUpdate = true;
 
+        // Compute the bounding box
+        geometry.computeBoundingBox();
+
+        // Get dimensions
+        let bbox = geometry.boundingBox;
+        let width = bbox.max.x - bbox.min.x;
+        let height = bbox.max.y - bbox.min.y;
+
+        // [Add code here which makes the GUI and plane the new width and height of the bounding box]
+
+
+        plane.geometry.dispose();
+        plane.geometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
+        plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        displayColors = new Array(displayHeight).fill(0).map(() => new Array(displayWidth).fill([0, 0, 0]));
+
+
+        material.needsUpdate = true;
         points = new THREE.Points(geometry, material);
         scene.add(points);
+
         // And make the scene update
         doWhileMoving();
 
@@ -214,32 +204,105 @@ function loadPly(url) {
 // Load a default PLY file from a URL when the script runs
 loadPly(defaultPlyFile);
 
-// // Add GUI folder to let user filter the alpha value
-//...
+
 // This function updates the canvas
 function updateCanvas() {
-//...
+    if (updateAfterMoving && !planeIsMoving) {
+        forceRefreshDisplay = true;
+        displayWidth = displayWidthOriginal;
+        displayHeight = displayHeightOriginal;
+        displayColors = new Array(displayHeight).fill(0).map(() => new Array(displayWidth).fill([0, 0, 0]));
+        updateAfterMoving = false;
+    }
+
+    if (points && (planeIsMoving || displayWidth !== displayWidthOriginal || displayHeight !== displayHeightOriginal || forceRefreshDisplay === true)) {
+
+        // Update displayColors at the current resolution
+        for (let y = 0; y < displayHeight; y++) {
+            for (let x = 0; x < displayWidth; x++) {
+                // Map the pixel coordinates to the corresponding coordinates on the plane in 3D space.
+                let localPos = new THREE.Vector3(
+                    x / displayWidth * planeGeometry.parameters.width - planeGeometry.parameters.width / 2,
+                        // Subtract y from displayHeight to flip the y-axis
+                        (displayHeight - y) / displayHeight * planeGeometry.parameters.height - planeGeometry.parameters.height / 2,
+                        //y / displayHeight * planeGeometry.parameters.height - planeGeometry.parameters.height / 2,
+                    0
+                );
+                // Transform the local position to world space according to the plane's world matrix
+                let worldPos = localPos.applyMatrix4(plane.matrixWorld);
+
+                // //Find the vertex in the point cloud which is closest to the given coordinate
+                let closestVertexIndex = findNearestNeighbor(grid, worldPos, cellSize);
+                if (closestVertexIndex !== null) {
+                    // Proceed with getting the color and updating displayColors
+                    // Sample the RGB color value of the given vertex, to be stored in `color`
+                    let color = new THREE.Color();
+                    color.fromBufferAttribute(points.geometry.attributes.color, closestVertexIndex);
+                    // Store the color in the displayColors array
+                    displayColors[y][x] = [color.r, color.g, color.b];
+                } else {
+                    //displayColors[y][x] = [1, 1, 1]; //Original, ChatGPT says I'm wrong tho lol
+                    displayColors[y][x] = [0, 0, 0];
+                }
+            }
+        }
+        forceRefreshDisplay = false;
+        areArraysReady = true;
+    } else {areArraysReady = true;}
 }
 
 // This function draws the new frame
 function drawFrame() {
-//...
+    if (areArraysReady) {
+        // Calculate scaling factors
+        let scaleX = canvas.width / displayWidth;
+        let scaleY = canvas.height / displayHeight;
+        // Code for drawing the new frame
+            // Draw the displayColors onto the canvas
+        if (areArraysReady) {
+            for (let y = 0; y < displayHeight; y++) {
+                for (let x = 0; x < displayWidth; x++) {
+                    let [r, g, b] = displayColors[y][x];
+                            // Apply gamma correction, becuase we need to do that for some reason
+                            gammaPowerAmount = 1 / uniforms.gammaCorrection.value;
+                            r = Math.pow(r, gammaPowerAmount);
+                            g = Math.pow(g, gammaPowerAmount);
+                            b = Math.pow(b, gammaPowerAmount);
+                            
+                    //bufferCtx.fillStyle = `rgb(${Math.round(r*255)}, ${Math.round(g*255)}, ${Math.round(b*255)})`; //Original code
+                    bufferCtx.fillStyle = `rgb(${r*255}, ${g*255}, ${b*255})`;
+                    bufferCtx.fillRect(x * scaleX, y * scaleY, scaleX, scaleY);  // Draw a rectangle for each pixel
+                }
+            }
+
+            // Only when you're done drawing, copy the content of the bufferCanvas onto the visible canvas
+            ctx.drawImage(bufferCanvas, 0, 0);
+            areArraysReady = false;
+            // Update the texture
+            planeTexture.needsUpdate = true;
+        }
+    }
 }
 
 // Animation loop
 function animate() {
     fpsCounter.begin()
     //check if loading is finished or not
-    if (points || debug){
+    if (points){
         document.getElementById('overlay').style.display = 'none'; // hide loading overlay
-    }    
+    }    else {
+        document.getElementById('overlay').style.display = 'flex';
+    }
+
     //update and draw canvas on plane and GUI
     updateCanvas();
     drawFrame();
+
     // Render the scene
     controls.update();
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
+
     // reset flag
     if (planeIsMoving) {
         planeIsMoving = false;
