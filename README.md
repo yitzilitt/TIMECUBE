@@ -10,6 +10,8 @@ Video inputs are TIMECUBIFIED into a 3-dimensional point cloud which allows the 
 
 ![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/8771885f-6fa2-432a-91f4-222e16418b15)
 
+_**Note: The TIMECUBE software is not yet complete, and may be very difficult to set up on your computer at present. Stay tuned as this project develops!**_
+
 ## Explanation
 ### Intorduction
 Imagine a typical video. Or don't. Whatever. I'll do the work for you:
