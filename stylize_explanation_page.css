@@ -1,0 +1,77 @@
+body {
+    background: #0000ff;
+    color: #00ff00;
+    font-family: 'Courier New', Courier, monospace;
+    animation: backgroundChange 10s infinite;
+}
+
+@keyframes backgroundChange {
+    0% { background-color: #0000ff; }
+    25% { background-color: #4b0082; }
+    50% { background-color: #800080; }
+    75% { background-color: #4b0082; }
+    100% { background-color: #0000ff; }
+}
+
+h1, h2, h3 {
+    font-size: 2em;
+    text-decoration: underline;
+    color: #00ff00;
+    animation: colorChange 1s infinite;
+}
+
+@keyframes colorChange {
+    0% { color: #00ff00; }
+    50% { color: #ffff00; }
+    100% { color: #00ff00; }
+}
+
+p, a {
+    font-size: 1.5em;
+    text-align: justify;
+    color: #00ff00;
+    animation: textColorChange 2s infinite;
+}
+
+a:hover {
+    background-color: rgba(50, 50, 50, 0.2);
+    text-shadow: 4px 1px 4px #ff3bbe, -2px -1px 4px #75fa69;
+}
+
+@keyframes textColorChange {
+    0% { color: #00ff00; }
+    50% { color: #ffff00; }
+    100% { color: #00ff00; }
+}
+
+a {
+    text-decoration: none;
+    color: #00ff00;
+    animation: linkColorChange 1s infinite;
+}
+
+@keyframes linkColorChange {
+    0% { color: #00ff00; }
+    50% { color: #ffff00; }
+    100% { color: #00ff00; }
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    border: 5px solid #00ff00;
+    animation: borderChange 3s infinite;
+}
+
+@keyframes borderChange {
+    0% { border-color: #00ff00; }
+    33% { border-color: #ffff00; }
+    67% { border-color: #00ff00; }
+    100% { border-color: #ffff00; }
+}
+
+.box {
+    margin: 2em;
+    padding: 2em;
+    border: 3px dashed #00ff00;
+}

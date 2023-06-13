@@ -1,0 +1,73 @@
+/* For dat.gui control: */
+.dg {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif !important;
+
+    text-shadow: 1px 0.25px 0.5px rgba(0, 0, 0, 0.467);
+}
+
+.dg:hover {
+    background-color: rgba(22, 22, 87, 0.5);
+}
+
+/* Everything else: */
+body {
+    /* font-family: 'Courier New', Courier, monospace; */
+    font-family: 'Courier New', Courier, monospace;
+}
+
+
+
+h1, h2, h3 {
+    font-size: 2em;
+    text-decoration: underline;
+    color: #f0f;
+    text-shadow: 2px 0.5px 2px #ea36ae80, -1px -0.5px 2px #75fa6980;
+    /* animation: colorChange 2s infinite; */
+}
+
+@keyframes colorChange {
+    0% { color: #f0f; }
+    50% { color: #0ff; }
+    100% { color: #f0f; }
+}
+
+p, a {
+    font-size: 1.5em;
+    text-align: justify;
+    color: #00ff00;
+    animation: textColorChange 2s infinite;
+}
+
+p:hover, a:hover {
+    background-color: rgba(22, 22, 87, 0.5);
+    text-shadow: 2px 0.5px 2px #ea36af, -1px -0.5px 2px #75fa69;
+}
+
+@keyframes textColorChange {
+    0% { color: #00ff00; }
+    50% { color: #ffff00; }
+    100% { color: #00ff00; }
+}
+
+h1:hover {
+    text-shadow: 2px 0.5px 2px #800000;
+    /* animation: titleHoverColorChange 1s infinite; */
+}
+
+@keyframes titleHoverColorChange {
+    0% { color: #921818; }
+    50% { color: #ff0000; }
+    100% { color: #921818; }
+}
+
+a {
+    text-decoration: none;
+    color: #00ff00;
+    animation: linkColorChange 1s infinite;
+}
+
+@keyframes linkColorChange {
+    0% { color: #00ff00; }
+    50% { color: #ffff00; }
+    100% { color: #00ff00; }
+}

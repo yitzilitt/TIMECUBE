@@ -8,12 +8,24 @@ import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 //import { MeshWboitMaterial, WboitPass } from 'three-wboit';
 import * as dat from 'dat.gui';
-import { createGrid, findNearestNeighbor } from './nearestNeighbor.js'; //import custom code
 import Stats from 'stats.js' //check framerate
+import Swal from 'sweetalert2'
+//import custom code
+import { createGrid, findNearestNeighbor } from './smaller_scripts/nearestNeighbor.js'; 
+// import { listPlyFiles, createPlyFileDropdown } from './smaller_scripts/dropdownFromFolderItems.js'; 
 
 
 //Declaring (most) global variables here
-let defaultPlyFile = 'man walking to bench.ply'; //replace with name of default .ply file to load
+let defaultPlyFile = 'timecube_models/man walking to bench.ply'; //replace with name of default .ply file to load
+// List of predefined .ply files
+var predefinedFiles = {
+    'Walking To A Bench': 'timecube_models/man walking to bench.ply',
+    'Blinking Clown': 'timecube_models/Clown blinking.ply',
+    'Dancing Ladies': 'timecube_models/dancing_girls.ply',
+    'Yitz Test' : 'timecube_models/Clown blinking Copy.yitz'
+    // ...add more here
+};
+// More variable declarations
 let plane;
 let planeIsMoving = true; //flag to indicate whether the plane has moved, begins as on
 let points;
@@ -21,17 +33,10 @@ let displayWidth = 100;
 let displayWidthOriginal = displayWidth; //in order to reset display to original once we change it
 let displayHeight = 100;
 let displayHeightOriginal = displayHeight; //in order to reset display to original once we change it
-// const lowResWidth = displayWidth / 2;
-// const lowResHeight = displayHeight / 2;
-// const planeWidth = displayWidth;
-// const planeHeight = displayHeight;
-
 let lowResWidth = displayWidth / 2;
 let lowResHeight = displayHeight / 2;
 let planeWidth = displayWidth;
 let planeHeight = displayHeight;
-
-let howMuchToDividePlaneBy; // Set how much smaller resolution  to make the plane display
 let grid = {}; // Declare the grid variable outside the loader function
 const cellSize = 2; // Set cellSize as a global variable
 let bThreshold = { value: 0.5 }; // The brightness value should be between 0 (black) and 1 (white).
@@ -46,7 +51,8 @@ let gammaPowerAmount;
 let updateAfterMoving = false; //new flag
 let forceRefreshDisplay = true;
 let areArraysReady = false;
-let debug = false; //set to true if you want to see fps counter, other dev help stuff.
+let debug = true; //set to true if you want to see fps counter, other dev help stuff.
+let HideAllGUIs = false;
 
 // Set up material variables here, so we can have fun messing with 'em :)
 let uniforms = { // These are defaults for brightness threshold options
@@ -59,10 +65,29 @@ let uniforms = { // These are defaults for brightness threshold options
     transparencyIntensity: { value: 1.0 } //  0 would make the object completely opaque; 1 (or greater) would make the object completely transparent
 };
 
+let optionOptions = {
+    openDialog: function() {
+        showDialog();
+    }
+}
+
+// Event listener for key presses
+document.addEventListener('keydown', function(event) {
+    // Check if the pressed key is 'h'
+    if (event.key === 'h') {
+      // Toggle the value of `HideAllGUIs`
+      HideAllGUIs = !HideAllGUIs;
+      toggleCanvasVisibility(!HideAllGUIs);
+      // Log the current state
+      console.log('GUIs hidden:', HideAllGUIs);
+    }
+  });
+
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
+console.log(renderer.capabilities.precision); //get how high precision the scene is
 //const renderer = new THREE.WebGLRenderer( { antialias : false } ); //for fps improvements if required
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -77,6 +102,16 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 //create GUI
 const gui = new dat.GUI();
+
+// Create a style link element for GUI
+const style = document.createElement('link');
+// Set the link attributes
+style.rel = 'stylesheet';
+style.type = 'text/css';
+style.href = 'css/timecube_slicer.css';  // path to CSS stylesheet
+// Append the stylesheet to the head of the document
+document.head.appendChild(style);
+
 //add GUI folders
 const timecubeFolder = gui.addFolder('General Settings');
 const planeFolder = gui.addFolder('Plane Controls');
@@ -104,6 +139,42 @@ function doWhileMoving() {
     displayColors = new Array(lowResHeight).fill(0).map(() => new Array(lowResWidth).fill([0, 0, 0]));
 }
 
+
+// Add option to return to homepage
+function showDialog() {
+    Swal.fire({
+        title: 'Return to homepage?',
+        showDenyButton: true,
+        confirmButtonText: 'Yes',
+        denyButtonText: `No`,
+        color: '#716add',
+        // background: '#fff url(images/treealgorithmic.png)',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = 'index.html';
+        }
+      })
+}
+timecubeFolder.add(optionOptions, 'openDialog').name('Go Back');
+
+
+// Add dropdown menu for pre-made timecube files
+// Object with a property for the current selection
+var selectedFile = {
+    file: 'Walking To A Bench' // Default value
+};
+
+// Function to load a .ply file based on the current selection
+function loadPredefinedFile() {
+    loadPly(predefinedFiles[selectedFile.file]);
+}
+
+// Add the dropdown to the GUI
+timecubeFolder.add(selectedFile, 'file', Object.keys(predefinedFiles)).name('Load TIMECUBE').onChange(loadPredefinedFile);
+
+
+
+
 // Let user upload their own .ply timecube files
 function userPlyUploadOption() {
     // Set up file input event listener
@@ -128,7 +199,7 @@ function userPlyUploadOption() {
         }
     };
     // Add .ply loader to GUI
-    timecubeFolder.add(params, 'loadFile').name('Load Custom PLY File');
+    timecubeFolder.add(params, 'loadFile').name('Import Custom TIMECUBE');
 }
 // Call the function
 userPlyUploadOption();
@@ -223,6 +294,15 @@ bufferCanvas.width = displayWidth;
 bufferCanvas.height = displayHeight;
 let bufferCtx = bufferCanvas.getContext('2d');
 
+// Function to toggle canvas visibility
+function toggleCanvasVisibility(isVisible) {
+    if (isVisible) {
+      canvas.style.display = 'block'; // Show the canvas
+    } else {
+      canvas.style.display = 'none'; // Hide the canvas
+    }
+  }
+
 // Create the texture here, after the canvas is created
 planeTexture = new THREE.Texture(canvas);
 planeTexture.minFilter = THREE.NearestFilter; // Disable minification filtering with THREE.NearestFilter
@@ -248,6 +328,7 @@ let planeMaterial = new THREE.ShaderMaterial({
       }
     `,
     fragmentShader: `
+      precision lowp float; // Make floating point low resolution
       uniform sampler2D map;
       varying vec2 vUv;
   
@@ -329,6 +410,7 @@ basicMaterial = new THREE.ShaderMaterial({
         }
     `,
     fragmentShader: `
+        precision lowp float; // Make floating point low resolution
         uniform vec3 color;
         uniform float gammaCorrection;
         varying vec3 vColor;
@@ -359,6 +441,7 @@ thresholdMaterial = new THREE.ShaderMaterial({
         }
     `,
     fragmentShader: `
+        precision lowp float; // Make floating point low resolution
         uniform vec3 color;
         uniform float gammaCorrection;
         uniform float brightnessThreshold;
@@ -400,6 +483,7 @@ translucentMaterial = new THREE.ShaderMaterial({
         }
     `,
     fragmentShader: `
+        precision lowp float; // Make floating point low resolution
         uniform vec3 color;
         uniform float gammaCorrection;
         uniform float brightnessThreshold;
