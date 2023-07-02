@@ -4,6 +4,11 @@ import * as THREE from 'three';
 // the points that fall within its bounds.
 // To find the nearest neighbor,
 // just search the points in the same cell and the neighboring cells.
+
+//You can retrieve all points within a specific cell
+//by accessing the value of the cell's key in the grid object.
+//The cell's key is a string in the format "x,y,z",
+//where x, y, and z are the integer coordinates of the cell.
 function createGrid(points, cellSize) {
     let grid = {};
 
@@ -22,11 +27,13 @@ function createGrid(points, cellSize) {
     return grid;
 }
 
-// Function to find nearest neighbor inside of grid
+// Function to find nearest neighbor inside of grid for a given position
 function findNearestNeighbor(grid, worldPos, cellSize) {
     let cellCoords = worldPos.clone().divideScalar(cellSize).floor();
     let closestVertexIndex = null;
-    let minDistance = Infinity;
+    //let minDistance = Infinity;
+    let minDistance = 1;
+
 
     for (let dx = -1; dx <= 1; dx++) {
         for (let dy = -1; dy <= 1; dy++) {
