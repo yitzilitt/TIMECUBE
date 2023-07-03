@@ -6,7 +6,7 @@ TIMECUBE is a tool for visualising [spacetime](https://en.wikipedia.org/wiki/Spa
 ## About
 The TIMECUBE is intended for artists, philosophers, scientists, film editors, and those who wish to [defamiliarize](https://en.wikipedia.org/wiki/Defamiliarization) themselves with the peculiar [dimensionality](https://en.wikipedia.org/wiki/Curse_of_dimensionality) of our universe.
 
-Video inputs are TIMECUBIFIED into a 3-dimensional point cloud which allows the pixel/color data of the entire video to be viewed at once. The cloud (or TIMECUBE) can also be "sliced" (via TIMEKNIVES) to view and output 2D cross-sections of the TIMECUBE, which can be used to create videos, showing an entirely alien perspective of the world.
+Video inputs are TIMECUBIFIED into a 3-dimensional point cloud which allows the pixel/color data of the entire video to be viewed at once. The cloud (or TIMECUBE) can also be "sliced" (via TIMEKNIVES) to view and output 2D cross-sections of the TIMECUBE, which can be used to create videos giving an entirely alien perspective of the world.
 
 ![ezgif com-optimize](https://github.com/yitzilitt/TIMECUBE/assets/28551587/d3e279f6-fe75-4d8b-98a9-4c5602cacd98)
 
