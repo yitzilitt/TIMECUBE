@@ -15,11 +15,13 @@ _**Note: The TIMECUBE software is not yet complete, and may be difficult to set 
 ## Features
 * Explore a collection of pre-existing TIMECUBEs, or import your own!
   * Currently supports `.ply` and `.timecube` file formats
-  * Coming soon: Convert .mp4 videos into `.timecube` or `.ply` files, allowing you to manipulate your TIMECUBE with other 3D-editing software, like MeshLab or Blender.
+  * COMING SOON: Convert .mp4 videos into `.timecube` or `.ply` files, allowing you to manipulate your TIMECUBE with other 3D-editing software, like MeshLab or Blender.
 * Control the way your TIMECUBE is visualized in the 3D editor, including transparency filtering, point size, and other effects.
 * Software design inspired by the aesthetics of the early internet, and [Nathalie Lawhead's](https://en.wikipedia.org/wiki/Nathalie_Lawhead) incredible artistic oeuvre. (Go ahead and [check out their work!!!!!](http://www.nathalielawhead.com/candybox/))
-* Slice your TIMECUBE with a buttery-smooth TIMEKNIFE to explore its interior volume [and COMING SOON, export the resulting cross-sections as high(ish) resolution sharable images]!
+* Slice your TIMECUBE with a buttery-smooth TIMEKNIFE to explore its interior volume [and COMING SOON, export the resulting cross-sections as high(ish) resolution sharable images, or video animations]!
 * Secrets ;-)
+* ...
+* [More features may be added as the project develops]
 
 ![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/8771885f-6fa2-432a-91f4-222e16418b15)
 
@@ -60,12 +62,6 @@ But that isn't the only way we can use our TIMEKNIFE. The nice thing about slici
 ![ezgif com-video-to-gif(3)](https://github.com/yitzilitt/TIMECUBE/assets/28551587/8c4d039b-2b01-48ad-9c74-0769f0777c8d)
 
 By specifying the start and end position of the TIMEKNIFE plane, you can create a video animation, and export it as an .mp4 file. [FEATURE NOT YET PUBLICLY AVAILABLE]
-
-
-
-
-[More to be added]
-
 
 ## Use Cases
 
