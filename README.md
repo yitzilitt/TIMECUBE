@@ -6,15 +6,26 @@ TIMECUBE is a tool for visualising [spacetime](https://en.wikipedia.org/wiki/Spa
 ## About
 The TIMECUBE is intended for artists, philosophers, scientists, film editors, and those who wish to [defamiliarize](https://en.wikipedia.org/wiki/Defamiliarization) themselves with the peculiar [dimensionality](https://en.wikipedia.org/wiki/Curse_of_dimensionality) of our universe.
 
-Video inputs are TIMECUBIFIED into a 3-dimensional point cloud which allows the pixel/color data of the entire video to be viewed at once. The cloud (or TIMECUBE) can be "sliced" (via TIMEKNIVES) to view and output 2D cross-sections of the TIMECUBE, which can be used to either reconstruct the original video, or to gain an entirely alien perspective of the world.
+Video inputs are TIMECUBIFIED into a 3-dimensional point cloud which allows the pixel/color data of the entire video to be viewed at once. The cloud (or TIMECUBE) can also be "sliced" (via TIMEKNIVES) to view and output 2D cross-sections of the TIMECUBE, which can be used to create videos, showing an entirely alien perspective of the world.
+
+![ezgif com-optimize](https://github.com/yitzilitt/TIMECUBE/assets/28551587/d3e279f6-fe75-4d8b-98a9-4c5602cacd98)
+
+_**Note: The TIMECUBE software is not yet complete, and may be difficult to set up on your computer at present. For now, you can explore a 'lite' version online, at [timecube.vercel.app](https://timecube.vercel.app/). Stay tuned as this project develops!**_
+
+## Features
+* Explore a collection of pre-existing TIMECUBEs, or import your own!
+  * Currently supports `.ply` and `.timecube` file formats
+  * Coming soon: Convert .mp4 videos into `.timecube` or `.ply` files, allowing you to manipulate your TIMECUBE with other 3D-editing software, like MeshLab or Blender.
+* Control the way your TIMECUBE is visualized in the 3D editor, including transparency filtering, point size, and other effects.
+* Software design inspired by the aesthetics of the early internet, and [Nathalie Lawhead's](https://en.wikipedia.org/wiki/Nathalie_Lawhead) incredible artistic oeuvre. (Go ahead and [check out their work!!!!!](http://www.nathalielawhead.com/candybox/))
+* Slice your TIMECUBE with a buttery-smooth TIMEKNIFE to explore its interior volume [and COMING SOON, export the resulting cross-sections as high(ish) resolution sharable images]!
+* Secrets ;-)
 
 ![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/8771885f-6fa2-432a-91f4-222e16418b15)
 
-_**Note: The TIMECUBE software is not yet complete, and may be very difficult to set up on your computer at present. Stay tuned as this project develops!**_
-
 ## Explanation
 ### Intorduction
-Imagine a typical video. Or don't. Whatever. I'll do the work for you:
+Imagine a typical video. Or don't. That's also fine. Here, I'll do the work for you:
 
 ![man walking tree bench](https://github.com/yitzilitt/TIMECUBE/assets/28551587/d09146f2-ecdd-423d-8dcf-0406fab99d04)
 
@@ -32,7 +43,7 @@ In order to create the TIMECUBE, instead of displaying the frames of a video as 
 
 (In the above visualization I have removed the lighter pixels from the scene, to make it easier to see the depth of the TIMECUBE.)
 
-# The TIMEKNIFE
+### The TIMEKNIFE
 An individual frame of a given video is effectivly a cross-section of that video's TIMECUBE. To retrieve a frame, we simply SLICE the TIMECUBE with a plane at the proper angle, and "paint" the plane (or TIMEKNIFE) with the nearest pixel values:
 
 ![image](https://github.com/yitzilitt/TIMECUBE/assets/28551587/2937dbbd-609e-464f-81d8-b539d6d10a62)
@@ -48,6 +59,8 @@ But that isn't the only way we can use our TIMEKNIFE. The nice thing about slici
 
 ![ezgif com-video-to-gif(3)](https://github.com/yitzilitt/TIMECUBE/assets/28551587/8c4d039b-2b01-48ad-9c74-0769f0777c8d)
 
+By specifying the start and end position of the TIMEKNIFE plane, you can create a video animation, and export it as an .mp4 file. [FEATURE NOT YET PUBLICLY AVAILABLE]
+
 
 
 
@@ -55,5 +68,6 @@ But that isn't the only way we can use our TIMEKNIFE. The nice thing about slici
 
 
 ## Use Cases
+
 The sky is the limit! :)
 
