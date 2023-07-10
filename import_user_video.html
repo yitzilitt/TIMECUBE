@@ -1,10 +1,31 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 <body>
 <h2>Upload File</h2>
-<form action="/api/upload" method="post" enctype="multipart/form-data">
+<form action="dist/javascript/upload.js" method="post" enctype="multipart/form-data">
   <input type="file" id="myFile" name="filename">
   <input type="submit">
 </form>
 </body>
+</html> -->
+
+<!DOCTYPE html>
+<html>
+  <body>
+    <h1>Hello World!</h1>
+    <button id="uploadButton">Minify Video</button>
+    <button id="convertButton">Convert Video to TIMECUBE</button>
+
+    <script>
+      document.getElementById('uploadButton').onclick = function() {
+        // [let user upload a .mp4 file, and use its URL as the input for window.convertVideo()]
+      };
+    
+      document.getElementById('convertButton').onclick = function() {
+        window.convertVideo('example.mp4');
+      };
+    </script>
+    
+
+  </body>
 </html>

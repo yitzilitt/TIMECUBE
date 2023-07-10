@@ -4,8 +4,10 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "start": "parcel build index.html --public-url . && electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prebuild": "del-cli dist/*.js && del-cli dist/*.html && del-cli dist/*.map && del-cli dist/*.css",
+    "build": "parcel build index.html --public-url .",
+    "start": "electron .",
+    "serve": "http-server ./dist -S -C cert.pem -K key.pem"
   },
   "keywords": [],
   "author": "Yitzi Litt",
@@ -22,6 +24,7 @@
     "nearby": "^0.0.3",
     "parcel-bundler": "^1.12.5",
     "python-shell": "^5.0.0",
+    "sharp": "^0.32.1",
     "stats.js": "^0.17.0",
     "sweetalert2": "^11.7.12",
     "three": "^0.152.2",
@@ -29,6 +32,9 @@
     "three-wboit": "^1.0.13"
   },
   "devDependencies": {
-    "marked": "^5.1.0"
+    "cross-env": "^7.0.3",
+    "del-cli": "^5.0.0",
+    "marked": "^5.1.0",
+    "rimraf": "^5.0.1"
   }
 }

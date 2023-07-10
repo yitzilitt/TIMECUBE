@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>3D Video Timecube</title>
+        <link rel="stylesheet" type="text/css" href="trippy_index_style.css">
+        <style>
+            body { margin: 0; font-family: 'Courier New', Courier, monospace; }
+            canvas { width: 100%; height: 100% }
+
+            #upload {
+                display: none;
+            }
+            
+            #overlay {
+                position: fixed;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black */
+                z-index: 9990; /* make sure it appears on top */
+            }
+
+            #loading-text {
+                /* color: white; */
+                font-size: 2em;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="upload">
+            <input type="file" id="plyFile" accept=".ply, .yitz, .timecube">
+            <input type="file" id="vidFile" accept=".mp4">
+        </div>
+        
+        <div id="overlay">
+            <div id="loading-text">
+                <h1>Loading...</h1>
+        </div>
+        </div>
+        <div id="canvasContainer" style="position: absolute; top: 0; left: 0; pointer-events: none;"></div>
+        <script src="timecube_slicer - VR.js"></script>
+
+    </body>
+</html>

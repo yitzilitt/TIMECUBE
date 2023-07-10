@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <h1>Hello World!</h1>
+    <button id="infoButton">Get System Info</button>
+    <p id="infoText"></p>
+    <script>
+      document.getElementById('infoButton').onclick = function() {
+        const sysInfo = window.getSystemInfo();
+        document.getElementById('infoText').textContent = sysInfo;
+      };
+    </script>
+  </body>
+</html>
