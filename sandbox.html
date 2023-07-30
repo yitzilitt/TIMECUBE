@@ -1,14 +1,54 @@
 <!DOCTYPE html>
 <html>
-  <body>
-    <h1>Hello World!</h1>
-    <button id="infoButton">Get System Info</button>
-    <p id="infoText"></p>
-    <script>
-      document.getElementById('infoButton').onclick = function() {
-        const sysInfo = window.getSystemInfo();
-        document.getElementById('infoText').textContent = sysInfo;
-      };
-    </script>
-  </body>
+    <head>
+        <link rel="icon" type="image/x-icon" href="./dist/images/favicon.ico">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    </head>
+    <body>
+        <h1>Hello World!</h1>
+        <button id="infoButton">Get System Info</button>
+        <button id="pythonRunButton">run Python script</button>
+        <p id="infoText"></p>
+        <script>
+        document.getElementById('infoButton').onclick = function() {
+            const sysInfo = window.getSystemInfo();
+            document.getElementById('infoText').textContent = sysInfo;
+        };
+
+        document.getElementById('pythonRunButton').addEventListener('click', async () => {
+
+            // Start the Swal loading popup
+            Swal.fire({
+                title: 'Loading...',
+                allowEscapeKey: false,
+                allowOutsideClick: false,
+                didOpen: () => {
+                Swal.showLoading();
+                }
+            });
+
+            try {
+                let pointsArray = [[51.787123933939604, -1.2069462425104982, -7.17036082012239],[104.91694554306812, 21.7691466321827, 74.38618749385326],[54.622052382430184, 67.39184842565481, 9.830320134079496]];
+                let resolutionPercentage = [100, 100];  // percent (out of 100) resolution of image
+                let video = "C:/Users/yitzi/Downloads/ezgif.com-gif-to-mp4.mp4";
+                console.log(JSON.stringify(resolutionPercentage));
+                const scriptName = 'takeVideoCrossSection.py';
+                const args = [video, JSON.stringify(pointsArray), JSON.stringify(resolutionPercentage)];
+                window.runPythonScript(scriptName, args)
+                    .then(result => {
+                        console.log(result);
+                        Swal.close();  // Close the Swal loading popup
+                        Swal.fire('Completed!', 'Your python script has finished executing.', 'success');
+                    })
+                    .catch(error => {
+                        Swal.close();  // Close the Swal loading popup
+                        Swal.fire('Error', `An error occurred: ${error}`, 'error');
+                    });
+            } catch (error) {
+                console.error(`An error occurred: ${error}`);
+            }
+        });
+
+        </script>
+    </body>
 </html>

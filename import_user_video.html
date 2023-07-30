@@ -11,21 +11,32 @@
 
 <!DOCTYPE html>
 <html>
+  <head>
+    <link rel="icon" type="image/x-icon" href="./dist/images/favicon.ico">
+  </head>
   <body>
-    <h1>Hello World!</h1>
-    <button id="uploadButton">Minify Video</button>
-    <button id="convertButton">Convert Video to TIMECUBE</button>
+    <h1>Convert videos to '.ply' TIMECUBEs<br>(if you want to, of course)</h1>
+    <button id="uploadButton" >Upload Video</button>
 
     <script>
-      document.getElementById('uploadButton').onclick = function() {
-        // [let user upload a .mp4 file, and use its URL as the input for window.convertVideo()]
-      };
-    
-      document.getElementById('convertButton').onclick = function() {
-        window.convertVideo('example.mp4');
-      };
-    </script>
-    
+      let isElectron = false;
+      try {
+          isElectron = !!window.navigator.userAgent.toLowerCase().includes('electron');
+      } catch(e) {
+          console.log('Not running in Electron; error: ', e);
+      }
 
+      if (isElectron) {
+
+          console.log("Running inside Electron!");
+          document.getElementById('uploadButton').disabled = false;
+          window.uploadNewVideoFile('uploadButton');
+
+      } else {
+          console.log("Not running inside Electron.");
+          document.getElementById('uploadButton').textContent = 'Sorry, importing videos is not yet available on your computer.\nStay tuned for future compatibility updates!'
+          document.getElementById('uploadButton').disabled = true;
+      }
+    </script>
   </body>
 </html>

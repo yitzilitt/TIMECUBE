@@ -22,13 +22,17 @@ import { Renderer } from 'marked';
 
 
 //Declaring (most) global variables here
-let defaultPlyFile = 'timecube_models/man walking to bench.ply'; //replace with name of default .ply file to load
+let defaultPlyFile = 'timecube_models/TINY man walking to bench.mp4.ply'; //replace with name of default .ply file to load
+let url;
+let file = defaultPlyFile;
+let nameOfFile =  file.replace('timecube_models/TINY ', '').replace('.mp4.ply', '');;
 // List of predefined .ply files
 var predefinedFiles = {
-    'Walking To A Bench': 'timecube_models/man walking to bench.ply',
-    'Blinking Clown': 'timecube_models/Clown blinking.ply',
-    'Dancing Ladies': 'timecube_models/dancing_girls.ply',
-    'Yitz Test' : 'timecube_models/Clown blinking Copy.yitz'
+    'Walking To Bench': 'timecube_models/TINY man walking to bench.mp4.ply', //doesn't yet have video
+    'Dancer At Night': 'timecube_models/Day-of-The-Dead Dance.mp4.ply', //has video
+    'Blinking Clown': 'timecube_models/TINY Clown blinking.mp4.ply', //has video
+    'Twirling Women': 'timecube_models/dancing_girls.mp4.ply', //has video
+    'Ring Around The Rosie': 'timecube_models/TINY INPUT ring around the rosie.mp4.ply', // has video
     // ...add more here
 };
 // More variable declarations
@@ -62,12 +66,15 @@ let translucentMaterial;
 let randomSortMaterial;
 let planeTexture;
 let planeMaterial;
+let animationPlaneStart;
+let animationPlaneEnd;
 let gammaPowerAmount;
 let updateAfterMoving = false; //new flag
 let forceRefreshDisplay = true;
 let areArraysReady = false;
 let debug = false; //set to true if you want to see fps counter, other dev help stuff.
 let HideAllGUIs = false;
+let dontShowLoading = false;
 
 // Set up material variables here, so we can have fun messing with 'em :)
 let uniforms = { // These are defaults for brightness threshold options
@@ -151,21 +158,60 @@ document.addEventListener('keydown', function(event) {
     }
     //if 'j' is pressed, copy coordinates of plane edges to clipboard
     if (event.key === 'j') {
+        // // Add visualizer for bounding box of TIMECUBE
+        // const boundingBoxVisualizer = new THREE.BoxHelper( points, 0xffff00 );
+        // scene.add( boundingBoxVisualizer );
 
-
-        const box = new THREE.BoxHelper( points, 0xffff00 );
-        scene.add( box );
+        // Get cooordinates of plane corners, and save past time this was called to memory
         let corners = planeDataExporter.getPlaneCorners(plane, bbox);
+        if (animationPlaneEnd) {
+            animationPlaneStart = animationPlaneEnd;
+        }
+        animationPlaneEnd = corners;
 
-        // Copy the text inside the text field
-        navigator.clipboard.writeText(JSON.stringify(corners)).then(function(x) {
-            alert("Coordinates of plane edges copied to clipboard");
-        });
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Plane position saved as keyframe!',
+            showConfirmButton: false,
+            timer: 1500
+          })
+
+        // // Copy the text inside the text field
+        // navigator.clipboard.writeText(JSON.stringify(corners)).then(function(x) {
+        //     alert("Coordinates of plane edges copied to clipboard");
+        // });
         // Alert the info was copied
-        console.log(JSON.stringify(corners));
+        console.log('Plane corners location data: ' + JSON.stringify(corners));
     }
 
   });
+
+
+// Function to let user download a file under a given name
+function makeDownloadableFile(pathToFile, nameToCallFile) {
+    fetch(pathToFile)
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = nameToCallFile; // provide the file name you want
+            a.click(); // this will trigger the dialog window to save the file.
+        });
+}
+
+
+//function to allow for a more intuitive setTimeout
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+// // Example usage:
+//   console.log("Hello");
+//   sleep(2000).then(() => { console.log("World!"); });
+  
+
+
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
@@ -254,6 +300,24 @@ function onDebugToggle(debug) {
 onDebugToggle(debug);
 
 
+// Check if app is running in electron or not
+let isElectron = false;
+function electronChecker() {
+    try {
+        isElectron = !!window.navigator.userAgent.toLowerCase().includes('electron');
+    } catch(e) {
+        console.log('`isElectron` checker failed; error: ', e);
+    }
+    // Output result to console
+    if (isElectron) {
+        console.log("Running inside Electron!");
+    } else {
+        console.log("Not running inside Electron!");
+    }
+}
+electronChecker();
+
+
 //function for lowering resolution while plane is being moved
 function doWhileMoving() {
     planeIsMoving = true;
@@ -287,49 +351,355 @@ timecubeFolder.add(optionOptions, 'openDialog').name('Go Back');
 // Add dropdown menu for pre-made timecube files
 // Object with a property for the current selection
 var selectedFile = {
-    file: 'Walking To A Bench' // Default value
+    file: 'Walking To Bench' // Default value
 };
 
 // Function to load a .ply file based on the current selection
 function loadPredefinedFile() {
     defaultPlyFile = predefinedFiles[selectedFile.file];
+    file = defaultPlyFile;
+    nameOfFile = file.replace('timecube_models/TINY ', '').replace('.mp4.ply', '');
+    selectedFile.file = Object.keys(predefinedFiles).find(key => predefinedFiles[key] === defaultPlyFile);
     resetUserOptions(); //reset all user-defined settings
     loadPly(defaultPlyFile);
 }
-
-// Add the dropdown to the GUI
+// Add menu of loadable files to the GUI
 timecubeFolder.add(selectedFile, 'file', Object.keys(predefinedFiles)).name('Load TIMECUBE').onChange(loadPredefinedFile);
 
+// // Let user upload their own .ply timecube files
+// function userPlyUploadOption() {
+//     // Set up file input event listener
+//     document.getElementById('plyFile').addEventListener('change', function(event) {
+//         const uploadedFile = event.target.files[0];
+//         file = uploadedFile;
+//         if (!uploadedFile) {
+//             console.log('No file selected!');
+//             return;
+//         }
 
-// Let user upload their own .ply timecube files
-function userPlyUploadOption() {
-    // Set up file input event listener
-    document.getElementById('plyFile').addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        if (!file) {
-            console.log('No file selected!');
-            return;
-        }
+//         // This line creates a URL representing the File object
+//         url = URL.createObjectURL(file);
+//         defaultPlyFile = url;
+//         resetUserOptions(); //reset all user-defined settings
 
-        // This line creates a URL representing the File object
-        const url = URL.createObjectURL(file);
-        defaultPlyFile = url;
-        resetUserOptions(); //reset all user-defined settings
-        // Now load the PLY from the generated URL
-        loadPly(defaultPlyFile);
-    });
+//         // Ask the user for a name for the uploaded file
+//         Swal.fire({
+//             title: 'Enter a name for the uploaded file:',
+//             input: 'text',
+//             inputAttributes: {
+//                 autocapitalize: 'off'
+//             },
+//             showCancelButton: true,
+//             confirmButtonText: 'Save',
+//             showLoaderOnConfirm: true,
+//         }).then((result) => {
+//             if (result.isConfirmed) {
+//                 // Add the file to the predefinedFiles object
+//                 predefinedFiles[result.value] = url;
+//                 selectedFile.file = result.value;
 
-    // Let user upload .ply file of their choice
-    var params = {
+//                 // Update the GUI
+//                 timecubeFolder.__controllers.forEach(function(controller) {
+//                     if (controller.property === 'file') {
+//                         controller.remove();
+//                     }
+//                 });
+//                 timecubeFolder.add(selectedFile, 'file', Object.keys(predefinedFiles)).name('Load TIMECUBE').onChange(loadPredefinedFile);
+//                 // timecubeFolder.add(predefinedFiles[result.value], 'file', Object.keys(predefinedFiles)).name('Load TIMECUBE').onChange(loadPredefinedFile);
+//             }
+//         })
+
+//         // Now load the PLY from the generated URL
+//         loadPly(defaultPlyFile);
+//     });
+
+//     // Let user upload .ply file of their choice
+//     var params = {
+//         loadFile : function() { 
+//                 document.getElementById('plyFile').click();
+//         }
+//     };
+//     // Add .ply loader to GUI
+//     timecubeFolder.add(params, 'loadFile').name('Import TIMECUBE file');
+// }
+
+// // Call the function
+// userPlyUploadOption();
+
+
+// Let user upload video files, if environment is able to support it
+function userVideoUploadOption() {
+
+    var videoUploadParams = {
         loadFile : function() { 
-                document.getElementById('plyFile').click();
+                document.getElementById('vidFile').click();
+                // Start the Swal loading popup
+                setTimeout(function() {
+                    Swal.fire({
+                        title: 'Loading...\n(This may take a minute)',
+                        allowEscapeKey: false,
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                }, 500); // delay in milliseconds
+                return;
+        },
+        notAvailableAlert : function() {
+            Swal.fire({
+                title: 'Sorry, importing videos is not yet available on your computer.\nStay tuned for future compatibility updates!',
+                showDenyButton: false,
+                confirmButtonText: 'Okay',
+                color: '#716add',
+                // background: '#fff url(images/treealgorithmic.png)',
+              })
         }
     };
-    // Add .ply loader to GUI
-    timecubeFolder.add(params, 'loadFile').name('Import Custom TIMECUBE');
+
+    if (isElectron) { // If app is running in electron, let user upload video files
+        document.getElementById('vidFile').disabled = false;
+
+        // Run function which gets user's file, and load it in our scene
+        window.uploadNewVideoFile('vidFile', output_filename => {
+            if (output_filename.length > 0) {
+                console.log('output_filename: ' + output_filename);
+                // load PLY file created by our function, then close "loading" popup
+                dontShowLoading = true; // So we don't get two loading screens
+                file = output_filename.replace('./dist/', ''); // This is the path of the PLY file
+                nameOfFile = file.replace('timecube_models/TINY ', '').replace('.mp4.ply', '');
+                console.log('nameOfFile is: ' + nameOfFile + ', and file is: ' + file);
+        
+                // This line creates a URL representing the File object
+                url = file; //URL.createObjectURL(file);
+                defaultPlyFile = url;
+                resetUserOptions(); //reset all user-defined settings
+        
+                        // Add the file to the predefinedFiles object
+                        predefinedFiles[nameOfFile] = url;
+                        selectedFile.file = nameOfFile;
+        
+                        // Update the GUI
+                        timecubeFolder.__controllers.forEach(function(controller) {
+                            if (controller.property === 'file') {
+                                controller.remove();
+                            }
+                        });
+                        timecubeFolder.add(selectedFile, 'file', Object.keys(predefinedFiles)).name('Load TIMECUBE').onChange(loadPredefinedFile);
+
+
+                loadPly(file).then((message) => {
+                    console.log(message); // logs 'PLY file loaded' when the promise is resolved
+                    Swal.close();  // Close the Swal loading popup
+                    Swal.fire('Completed!', 'Your video file has been converted to TIMECUBE format', 'success');
+                    dontShowLoading = false;
+                }).catch((error) => {
+                    console.error('Failed to load PLY file', error);
+                    Swal.close();  // Close the Swal loading popup
+                    Swal.fire('Error', `An error occurred: ${error}`, 'error');
+                });
+            } else { // if output filepath string is blank, then we cancel, as some error happened
+                Swal.close();  // Close the Swal loading popup
+                Swal.fire('', `No valid filepath provided`);
+            }
+        });
+
+        // Add GUI button to run function
+        timecubeFolder.add(videoUploadParams, 'loadFile').name('Import Video');
+
+    } else { // If not running in electron, let user know option is disabled
+        timecubeFolder.add(videoUploadParams, 'notAvailableAlert').name('Import Video [Not Available]');
+    }
 }
 // Call the function
-userPlyUploadOption();
+userVideoUploadOption();
+
+
+// Let user export image of cross-section, if environment is able to support it
+function userExportImage() {
+    var exportImageParams = {
+        startExport : function() { 
+                document.getElementById('imgExport').click();
+                return;
+        },
+        notAvailableAlert : function() {
+            Swal.fire({
+                title: 'Sorry, exporting high-resolution images is not yet available on your computer.\nStay tuned for future compatibility updates!',
+                showDenyButton: false,
+                confirmButtonText: 'Okay',
+                color: '#716add',
+                // background: '#fff url(images/treealgorithmic.png)',
+              })
+        }
+    };
+
+    if (isElectron) { // If app is running in electron, let user upload video files
+        document.getElementById('imgExport').addEventListener('click', async () => {
+
+            // Start the Swal loading popup
+            Swal.fire({
+                title: 'Loading...\n(This may take a few seconds)',
+                allowEscapeKey: false,
+                allowOutsideClick: false,
+                didOpen: () => {
+                Swal.showLoading();
+                }
+            });
+
+            try {
+                // Get cooordinates of plane corners
+                let corners = planeDataExporter.getPlaneCorners(plane, bbox);
+                    let pathOfOutputFile = '../' + 'cross_section_of_TIMECUBE.png';
+                    let nameOfImageForUsers = 'TIMESLICED ' + nameOfFile + '.png';
+
+                // // Copy the text inside the text field
+                // navigator.clipboard.writeText(JSON.stringify(corners))
+
+                // let pointsArray = [[51.787123933939604, -1.2069462425104982, -7.17036082012239],[104.91694554306812, 21.7691466321827, 74.38618749385326],[54.622052382430184, 67.39184842565481, 9.830320134079496]];
+                let resolutionPercentage = [100, 100];  // percent (out of 100) resolution of image
+                // let video = './' + file.replace('.ply', '');
+                // let video = '../dist/timecube_models/' + nameOfFile + '.mp4';
+                let video = '../dist/' + file.replace('TINY ', '').replace('.ply', '');
+                console.log('video: ' + video + ' resolutionPercentage: ' + JSON.stringify(resolutionPercentage));
+                console.log('corner coordinates: ' + JSON.stringify(corners));
+                const scriptName = 'takeVideoCrossSection.py';
+                const args = ['ImageExport', video, JSON.stringify(corners), JSON.stringify(resolutionPercentage)];
+                window.runPythonScript(scriptName, args)
+                    .then(result => {
+                        console.log(result);
+                        sleep(500) // wait so image can update
+                        .then(() => Swal.close())  // Close the Swal loading popupSwal.close();  // Close the Swal loading popup
+                        .then(() => Swal.fire({
+                            // icon: 'success',
+                            // title: 'TIMECUBE sliced!',
+                            imageUrl: `${pathOfOutputFile}?${new Date().getTime()}`, //adds timestamp to avoid the image getting cached
+                            imageAlt: 'cross section of TIMECUBE',
+                            text: 'Save image?',
+                            showCancelButton: true,
+                            confirmButtonText: 'Save',
+                            color: '#716add',
+                            // background: '#fff url(images/treealgorithmic.png)',
+                            }).then((result) => {
+                            if (result.isConfirmed) {
+                                makeDownloadableFile(pathOfOutputFile, nameOfImageForUsers);
+                            }
+                            }))
+                    })
+                    .catch(error => {
+                        Swal.close();  // Close the Swal loading popup
+                        Swal.fire('Error', `An error occurred: ${error}`, 'error');
+                    });
+            } catch (error) {
+                console.error(`An error occurred: ${error}`);
+                Swal.close();  // Close the Swal loading popup
+                Swal.fire('Error', `An error occurred: ${error}`, 'error');
+            }
+        });
+
+        // Add GUI button to run function
+        timecubeFolder.add(exportImageParams, 'startExport').name('Export Image');
+
+    } else { // If not running in electron, let user know option is disabled
+        timecubeFolder.add(exportImageParams, 'notAvailableAlert').name('Export Image [Not Available]');
+    }
+}
+// Call the function
+userExportImage();
+
+
+
+// Let user export video of cross-section, if environment is able to support it
+function userExportVideo() {
+    var exportVideoParams = {
+        startExport : function() { 
+                document.getElementById('vidExport').click();
+                return;
+        },
+        notAvailableAlert : function() {
+            Swal.fire({
+                title: 'Sorry, exporting high-resolution video is not yet available on your computer.\nStay tuned for future compatibility updates!',
+                showDenyButton: false,
+                confirmButtonText: 'Okay',
+                color: '#716add',
+                // background: '#fff url(images/treealgorithmic.png)',
+              })
+        }
+    };
+
+    if (isElectron) { // If app is running in electron, let user upload video files
+        document.getElementById('vidExport').addEventListener('click', async () => {
+
+            // Start the Swal loading popup
+            Swal.fire({
+                title: 'Loading...\n(This may take a few minutes if your video resolution is high)',
+                allowEscapeKey: false,
+                allowOutsideClick: false,
+                didOpen: () => {
+                Swal.showLoading();
+                }
+            });
+
+            try {
+                // Get cooordinates of plane corners
+                let corners = planeDataExporter.getPlaneCorners(plane, bbox);
+                    let pathOfOutputFile = '../' + 'cross_section_of_TIMECUBE.png';
+                    let nameOfImageForUsers = 'TIMESLICED ' + nameOfFile + '.png';
+
+                // // Copy the text inside the text field
+                // navigator.clipboard.writeText(JSON.stringify(corners))
+
+                // let pointsArray = [[51.787123933939604, -1.2069462425104982, -7.17036082012239],[104.91694554306812, 21.7691466321827, 74.38618749385326],[54.622052382430184, 67.39184842565481, 9.830320134079496]];
+                let resolutionPercentage = [100, 100];  // percent (out of 100) resolution of image
+                // let video = './' + file.replace('.ply', '');
+                // let video = '../dist/timecube_models/' + nameOfFile + '.mp4';
+                let video = '../dist/' + file.replace('TINY ', '').replace('.ply', '');
+                console.log('video: ' + video + ' resolutionPercentage: ' + JSON.stringify(resolutionPercentage));
+                // console.log('corner coordinates: ' + JSON.stringify(corners));
+                const scriptName = 'takeVideoCrossSection.py';
+                const args = ['VideoExport', video, JSON.stringify(animationPlaneStart), JSON.stringify(resolutionPercentage), JSON.stringify(animationPlaneEnd)];
+                window.runPythonScript(scriptName, args)
+                    .then(result => {
+                        console.log(result);
+                        sleep(500) // wait so image can update
+                        .then(() => Swal.close())  // Close the Swal loading popupSwal.close();  // Close the Swal loading popup
+                        .then(() => Swal.fire({
+                            // icon: 'success',
+                            // title: 'TIMECUBE sliced!',
+                            imageUrl: `${pathOfOutputFile}?${new Date().getTime()}`, //adds timestamp to avoid the image getting cached
+                            imageAlt: 'cross section of TIMECUBE',
+                            text: 'Save image?',
+                            showCancelButton: true,
+                            confirmButtonText: 'Save',
+                            color: '#716add',
+                            // background: '#fff url(images/treealgorithmic.png)',
+                            }).then((result) => {
+                            if (result.isConfirmed) {
+                                makeDownloadableFile(pathOfOutputFile, nameOfImageForUsers);
+                            }
+                            }))
+                    })
+                    .catch(error => {
+                        Swal.close();  // Close the Swal loading popup
+                        Swal.fire('Error', `An error occurred: ${error}`, 'error');
+                    });
+            } catch (error) {
+                console.error(`An error occurred: ${error}`);
+                Swal.close();  // Close the Swal loading popup
+                Swal.fire('Error', `An error occurred: ${error}`, 'error');
+            }
+        });
+
+        // Add GUI button to run function
+        timecubeFolder.add(exportVideoParams, 'startExport').name('Export Video');
+
+    } else { // If not running in electron, let user know option is disabled
+        timecubeFolder.add(exportVideoParams, 'notAvailableAlert').name('Export Video [Not Available]');
+    }
+}
+// Call the function
+userExportVideo();
+
+
 
 
 // // Let user upload their own video files to be converted to timecube
@@ -442,10 +812,10 @@ let bufferCtx = bufferCanvas.getContext('2d');
 function toggleCanvasVisibility(isVisible) {
     if (isVisible) {
       canvas.style.display = 'block'; // Show the canvas
-      localtransformControls.visible = true; //show transform helper for plane
+      planeTransformControls.visible = true; //show transform helper for plane
     } else {
       canvas.style.display = 'none'; // Hide the canvas
-      localtransformControls.visible = false; //hide transform helper for plane
+      planeTransformControls.visible = false; //hide transform helper for plane
     }
   }
 
@@ -504,10 +874,13 @@ definePlaneMaterial(planeTexture);
 //add intersecting plane to the scene
 let planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight); //width and height of plane  
 plane = new THREE.Mesh(planeGeometry, planeMaterial);
+plane.name = 'plane';
 // create infinite plane to use for clipping parallel to visible plane
 let globalPlane = new THREE.Plane();
+globalPlane.name = 'globalPlane';
 //have plane be child of planeContainer (an invisible point in the center of world)
 const planeContainer = new THREE.Object3D(); //this is what we are rotating around
+planeContainer.name = 'planeContainer'
 planeContainer.add(plane);
 scene.add(planeContainer);
 
@@ -515,21 +888,24 @@ scene.add(planeContainer);
 var lineMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
 var outlineGeometry = new THREE.EdgesGeometry( planeGeometry );
 var planeWireframe = new THREE.LineSegments( outlineGeometry, lineMaterial );
+planeWireframe.name = 'planeWireframe';
 plane.add(planeWireframe);
 
 // In-scene controller GUI for plane
-let localtransformControls = new tControls.TransformControls(camera, renderer.domElement);
-localtransformControls.attach(planeContainer);
-localtransformControls.setMode('combined');
-localtransformControls.setSpace('local');
+let planeTransformControls = new tControls.TransformControls(camera, renderer.domElement);
+planeTransformControls.name = 'plane transform controls';
+// console.log(planeTransformControls);
+planeTransformControls.attach(planeContainer);
+planeTransformControls.setMode('combined');
+planeTransformControls.setSpace('local');
 //localtransformControls.worldPosition = new THREE.Vector3(3, 3, 3);; //localtransformControls.position
-scene.add(localtransformControls);
+scene.add(planeTransformControls);
 // Make sure the scene controls aren't activated when we change the local controls
-localtransformControls.addEventListener('dragging-changed', function (event) {
+planeTransformControls.addEventListener('dragging-changed', function (event) {
     orbitControls.enabled = !event.value;
     isDragging = event.value;
 });
-localtransformControls.addEventListener('change', function() {
+planeTransformControls.addEventListener('change', function() {
     if (isDragging) {
         doWhileMoving();
     }
@@ -539,25 +915,20 @@ localtransformControls.addEventListener('change', function() {
 window.addEventListener('keydown', function (event) {
     switch (event.key) {
         case 't':
-            localtransformControls.setMode('translate');
+            planeTransformControls.setMode('translate');
             break
         case 'r':
-            localtransformControls.setMode('rotate');
+            planeTransformControls.setMode('rotate');
             break
         case 's':
-            localtransformControls.setMode('scale');
+            planeTransformControls.setMode('scale');
             break
         case 'e':
-            localtransformControls.setMode('combined');
+            planeTransformControls.setMode('combined');
             break
     }
 })
 
-// Visualizer for clipping plane
-// if (debug) {
-//     globalPlaneVisualizer = new THREE.PlaneHelper(globalPlane, 100, 0xffff00);
-//     scene.add(globalPlaneVisualizer); 
-// }
 
 // Call updatePlane() whenever you move or rotate the planeContainer
 function updatePlane() {
@@ -584,8 +955,9 @@ function updatePlane() {
 
 // Allow user to manipulate the location and visibility of the plane
 function planeManipulation(){
+    const planeMoveFolder = planeFolder.addFolder('Location & Rotation');
     //directions to manipulate plane in, and setting vars to check if user is moving the plane
-    planeFolder.add(planeContainer.position, 'z', -100, 100).name('Plane Position').onChange(function() {doWhileMoving()}); //coordinates are how far to go in either direction
+    planeMoveFolder.add(planeContainer.position, 'z', -100, 100).name('Plane Position').onChange(function() {doWhileMoving()}); //coordinates are how far to go in either direction
     // Create objects to hold the user-friendly rotation values
     let planeRotationHolder = {
         rotationX: 0,
@@ -597,17 +969,17 @@ function planeManipulation(){
         return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
     }
     
-    planeFolder.add(planeRotationHolder, 'rotationX', -180, 180).name('Plane Rotation X').onChange(function(value) {
+    planeMoveFolder.add(planeRotationHolder, 'rotationX', -180, 180).name('Plane Rotation X').onChange(function(value) {
         planeContainer.rotation.x = mapValue(value, -180, 180, -Math.PI, Math.PI);
         doWhileMoving();
     });
     
-    planeFolder.add(planeRotationHolder, 'rotationY', -180, 180).name('Plane Rotation Y').onChange(function(value) {
+    planeMoveFolder.add(planeRotationHolder, 'rotationY', -180, 180).name('Plane Rotation Y').onChange(function(value) {
         planeContainer.rotation.y = mapValue(value, -180, 180, -Math.PI, Math.PI);
         doWhileMoving();
     });
     
-    planeFolder.add(planeRotationHolder, 'rotationZ', -180, 180).name('Plane Rotation Z').onChange(function(value) {
+    planeMoveFolder.add(planeRotationHolder, 'rotationZ', -180, 180).name('Plane Rotation Z').onChange(function(value) {
         planeContainer.rotation.z = mapValue(value, -180, 180, -Math.PI, Math.PI);
         doWhileMoving();
     });
@@ -617,7 +989,7 @@ function planeManipulation(){
     planeFolder.add(showPlane, 'value').name('Hide Plane').onChange(function() {
         plane.layers.toggle( 0 );
     });
-    planeFolder.open(); //have the folder start off with all options showing
+    // planeFolder.open(); //have the folder start off with all options showing
 }
 planeManipulation();
 
@@ -627,37 +999,39 @@ function resetPlaneLocation() {
     let worldPosition = new THREE.Vector3();
     let worldQuaternion = new THREE.Quaternion();
     let worldScale = new THREE.Vector3();
-    
+
     // desired absolute transformation
     worldPosition.set(0, 0, 0);
     worldQuaternion.setFromEuler(new THREE.Euler(0, 0, 0, 'XYZ'));
     worldScale.set(1, 1, 1);
-    
+
     // inverse of the parent's world transformation
     let parentWorldMatrix = new THREE.Matrix4();
-    
-    if (plane.parent) {
-        parentWorldMatrix.copy(plane.parent.matrixWorld);
+
+    if (planeContainer.parent) {
+        parentWorldMatrix.copy(planeContainer.parent.matrixWorld);
     }
-    
+
     let inverseParentWorldMatrix = new THREE.Matrix4();
     inverseParentWorldMatrix.copy(parentWorldMatrix).invert();
-    
+
     // apply the inverse parent world matrix to the desired world matrix
     let matrix = new THREE.Matrix4();
     matrix.compose(worldPosition, worldQuaternion, worldScale);
     matrix.premultiply(inverseParentWorldMatrix);
-    
-    // Apply the resulting matrix to the plane
-    plane.matrix.copy(matrix);
-    plane.matrix.decompose(plane.position, plane.quaternion, plane.scale);
-    plane.updateMatrixWorld(true); // update the world matrix
-    
-    
+
+    // Apply the resulting matrix to the planeContainer
+    planeContainer.matrix.copy(matrix);
+    planeContainer.matrix.decompose(planeContainer.position, planeContainer.quaternion, planeContainer.scale);
+    planeContainer.updateMatrixWorld(true); // update the world matrix
+
+    // Update the transform controls to reflect the new position of the planeContainer
+    // planeTransformControls.update(); // Function now depricated
+
     doWhileMoving();
     console.log('plane reset');
-
 }
+
 planeFolder.add(optionOptions, 'resetPlane').name('Reset Plane');
 
 
@@ -901,90 +1275,100 @@ function resetUserOptions() {
 
 //.ply loader
 function loadPly(url) {
-    // Remove the old Points object from the scene, if it exists
-    if (points) {
-        scene.remove(points);
-        points = null;
-    }
-    //load new ply file
-    const loader = new PLYLoader();
-    loader.load(url, function (geometry) {
-        if (randomSortMaterial) { // if our material type is randomDepthSort, randomize geometry loading
-            const shuffledGeometry = shuffleGeometry(geometry);
-            geometry = shuffledGeometry;
-            console.log('geometry shuffled!');
+    return new Promise((resolve, reject) => {
+        // Remove the old Points object from the scene, if it exists
+        if (points) {
+            scene.remove(points);
+            points = null;
         }
+        //load new ply file
+        const loader = new PLYLoader();
+        loader.load(url, function (geometry) {
+            if (randomSortMaterial) { // if our material type is randomDepthSort, randomize geometry loading
+                const shuffledGeometry = shuffleGeometry(geometry);
+                geometry = shuffledGeometry;
+                console.log('geometry shuffled!');
+            }
 
-        geometry.rotateZ(Math.PI);
-        geometry.center(); 
-        //geometry.scale(1, 1, -1); //flip along z-axis to test render order issues
+            geometry.rotateZ(Math.PI);
+            geometry.center(); 
+            // geometry.scale(-1, -1, -1); // flip along every axis
 
 
-        // Make the GUI canvas and plane the width and height of the ply's bounding box
-        // Compute the bounding box and get dimensions
-        geometry.computeBoundingBox();
-        bbox = geometry.boundingBox;
-        let width = bbox.max.x - bbox.min.x;
-        let height = bbox.max.y - bbox.min.y;
-        let depth = bbox.max.z - bbox.min.z;
-        console.log('Width of bounding box: ', Math.round(width), ', Height of bounding box: ', Math.round(height));
+            // Make the GUI canvas and plane the width and height of the ply's bounding box
+            // Compute the bounding box and get dimensions
+            geometry.computeBoundingBox();
+            bbox = geometry.boundingBox;
+            let width = bbox.max.x - bbox.min.x;
+            let height = bbox.max.y - bbox.min.y;
+            let depth = bbox.max.z - bbox.min.z;
+            console.log('Width of bounding box: ', Math.round(width), ', Height of bounding box: ', Math.round(height));
 
-        // Set camera to twice as far away as point cloud's longest side
-        camera.position.z = Math.max(width, height, depth);
+            // Set camera to twice as far away as point cloud's longest side
+            camera.position.z = Math.max(width, height, depth);
 
-        // Update the display size and low resolution size of plane / GUI
-        displayWidth = displayWidthOriginal = Math.round(width);
-        displayHeight = displayHeightOriginal = Math.round(height);
-        lowResWidth = Math.round(displayWidth / 2);
-        lowResHeight = Math.round(displayHeight / 2);
+            // Update the display size and low resolution size of plane / GUI
+            displayWidth = displayWidthOriginal = Math.round(width);
+            displayHeight = displayHeightOriginal = Math.round(height);
+            lowResWidth = Math.round(displayWidth / 2);
+            lowResHeight = Math.round(displayHeight / 2);
 
-        // Update canvas, buffer canvas, and color array dimensions
-        canvas.width = displayWidth;
-        canvas.height = displayHeight;
-        bufferCanvas.width = displayWidth;
-        bufferCanvas.height = displayHeight;
-        displayColors = new Array(displayHeight).fill(0).map(() => new Array(displayWidth).fill([0, 0, 0]));
+            // Update canvas, buffer canvas, and color array dimensions
+            canvas.width = displayWidth;
+            canvas.height = displayHeight;
+            bufferCanvas.width = displayWidth;
+            bufferCanvas.height = displayHeight;
+            displayColors = new Array(displayHeight).fill(0).map(() => new Array(displayWidth).fill([0, 0, 0]));
 
-        // Update the plane geometry's size
-        planeGeometry.dispose(); // free memory from the old geometry
-        planeGeometry = new THREE.PlaneGeometry(displayWidth, displayHeight);
+            // Update the plane geometry's size
+            planeGeometry.dispose(); // free memory from the old geometry
+            planeGeometry = new THREE.PlaneGeometry(displayWidth, displayHeight);
 
-        // Dispose of old texture & material, and remake with the updated canvas
-        planeTexture.dispose();
-        planeTexture = new THREE.Texture(canvas);
-        planeTexture.minFilter = THREE.NearestFilter; // Disable minification filtering with THREE.NearestFilter
-        planeTexture.magFilter = THREE.NearestFilter; // Disable magnification filtering with THREE.NearestFilter
-        planeMaterial.dispose;
-        definePlaneMaterial(planeTexture);
+            // Dispose of old texture & material, and remake with the updated canvas
+            planeTexture.dispose();
+            planeTexture = new THREE.Texture(canvas);
+            planeTexture.minFilter = THREE.NearestFilter; // Disable minification filtering with THREE.NearestFilter
+            planeTexture.magFilter = THREE.NearestFilter; // Disable magnification filtering with THREE.NearestFilter
+            planeMaterial.dispose;
+            definePlaneMaterial(planeTexture);
 
-        // // Update the plane itself
-        plane.geometry.dispose();
-        plane.material.dispose();
-        plane.geometry = planeGeometry;
-        plane.material = planeMaterial;
+            // // Update the plane itself
+            plane.geometry.dispose();
+            plane.material.dispose();
+            plane.geometry = planeGeometry;
+            plane.material = planeMaterial;
 
-        //update plane outline
-        outlineGeometry.dispose();
-        outlineGeometry = new THREE.EdgesGeometry( planeGeometry );
-        planeWireframe.geometry.dispose();
-        planeWireframe.geometry = outlineGeometry;
+            //update plane outline
+            outlineGeometry.dispose();
+            outlineGeometry = new THREE.EdgesGeometry( planeGeometry );
+            planeWireframe.geometry.dispose();
+            planeWireframe.geometry = outlineGeometry;
 
-        // Update point cloud material
-        material.needsUpdate = true;
-        points = new THREE.Points(geometry, material);
-        scene.add(points);
+            // Update point cloud material
+            material.needsUpdate = true;
+            points = new THREE.Points(geometry, material);
+            scene.add(points);
 
-        // And run function we always run when making a change to plane settings
-        doWhileMoving();
+            // And run function we always run when making a change to plane settings
+            doWhileMoving();
 
-        // Finally, create the grid after the points have been added to the scene
-        grid = createGrid(points, cellSize);
-    }, undefined, function (error) {
-        console.error(error);
+            // Then, create the grid after the points have been added to the scene
+            grid = createGrid(points, cellSize);
+
+            // Finally, resolve the Promise after everything is done
+            resolve('PLY file loaded');
+        }, undefined, function (error) {
+            console.error(error);
+            reject(error);
+        });
     });
 }
 // Load a default PLY file from a URL when the script runs for the first time
-loadPly(defaultPlyFile);
+loadPly(defaultPlyFile).then((message) => {
+    console.log(message); // logs 'PLY file loaded' when the promise is resolved
+}).catch((error) => {
+    console.error('Failed to load PLY file', error);
+});
 
 
 // This function updates the canvas
@@ -1087,9 +1471,9 @@ function animate() {
     fpsCounter.begin()
 
     //check if loading is finished or not
-    if (points){
+    if (points || dontShowLoading){
         document.getElementById('overlay').style.display = 'none'; // hide loading overlay
-    }    else {
+    } else {
         document.getElementById('overlay').style.display = 'flex';
     }
 
@@ -1098,8 +1482,9 @@ function animate() {
     drawFrame();
 
     // Render the scene
-    renderer.render(scene, camera);
     requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+    // requestAnimationFrame(animate);
 
     // reset flag
     if (planeIsMoving) {

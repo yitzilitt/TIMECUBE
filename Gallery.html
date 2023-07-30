@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TIMECUBE Image Gallery</title>
+  <link rel="icon" type="image/x-icon" href="./dist/images/favicon.ico">
+  <!-- CSS -->
+  <link rel="stylesheet" type="text/css" href="gallery_style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css">
+  <link rel="stylesheet" href="trippyHover.css">
+  <style>
+    .lb-outerContainer {
+        background-color: #0B1319 !important; /* Or any color you prefer */
+    }
+
+    /* .lightbox .lb-cancel {
+        background-image: url('path-to-your-loading-icon') !important;
+    } */
+  </style>
+  
+</head>
+<body>
+        <!-- Images will be added here by JavaScript -->
+    </div>
+    <div id="content">
+        <!-- <h1 style="text-align: center; padding: 20px;">TIMECUBE Art Gallery</h1>
+        <div id="image-gallery"> -->
+            
+        <div id="center">
+            <div id="container">
+                <h1 style="text-align: center; padding: 20px;">TIMECUBE Art Gallery</h1>
+                <div id="image-gallery">
+            </div>
+        </div>
+    </div>
+
+  <!-- JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox-plus-jquery.min.js"></script>
+    <script>
+        // Use command `http-server -S -C cert.pem -K key.pem` in Windows Command Prompt
+            // to run local server, and add '/dist' after period in paths to update live.
+            // If you want to update list of images, run `dir /b` on
+            // './dist/images/gallery' folder, and copy/paste.
+        fetch('./images/gallery_images_list.txt?' + new Date().getTime()) // get list of images, adding date to avoid caching
+        .then(response => response.text())
+        .then(data => {
+            // Split the file content into lines
+            let lines = data.split('\n');
+
+            // Select the div where you want to append the images
+            let container = document.getElementById('image-gallery');
+
+            // Define your image path
+            let imagePath = './images/gallery/'; //remove 'dist/', or add if testing on local server
+
+            // Create an 'a' element with an 'img' child (with a 'div' child) for each line
+            lines.forEach(line => {
+                let a = document.createElement('a');
+                a.href = imagePath + line;
+                a.dataset.lightbox = "myimages";
+
+                let div = document.createElement('div');
+                div.className = 'img-container';
+
+                let img = document.createElement('img');
+                img.src = imagePath + line;
+
+                a.appendChild(div);
+                div.appendChild(img);
+                container.appendChild(a);
+            });
+
+        });
+    </script>
+    <div id="loader-container"></div>
+    <script src="mouseHoverEffect.js"></script>
+</body>
+</html>
+
+
